@@ -6,7 +6,7 @@
 
 **Architecture:** Rails 8 + SQLite (WAL mode) + Hotwire (Turbo + Stimulus). Single `Entrant` model with JSON interest_areas. `RaffleDraw` audit model. Two controller namespaces: `KioskController` (public) and `Admin::` (password-protected). Three-layer data integrity: SQLite, JSONL append log, USB backup.
 
-**Tech Stack:** Ruby 3.3, Rails 8, SQLite3, Hotwire (Turbo + Stimulus), Minitest
+**Tech Stack:** Ruby 4.0, Rails 8.1, SQLite3, Hotwire (Turbo + Stimulus), Minitest
 
 **Reference docs:**
 - `DEVELOPMENT_PLAN.md` — full product specification
@@ -14,7 +14,7 @@
 
 ---
 
-## Task 1: Rails Project Scaffold
+## Task 1: Rails Project Scaffold ✅ (completed 2026-03-14)
 
 **Files:**
 - Create: entire Rails project in current directory
