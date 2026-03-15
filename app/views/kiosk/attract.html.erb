@@ -1,8 +1,11 @@
-<h1>Win a Commodore 64 Ultimate</h1>
-<p>Enter the raffle below.</p>
-<ul>
-  <li>No purchase required</li>
-  <li>Winner does NOT need to be present</li>
-  <li>Prize will be shipped if necessary</li>
-</ul>
-<%= link_to "Enter the Raffle", enter_path %>
+<div class="screen-attract">
+  <%= image_tag "FF-Sec_RGB_Logo_darkmode.png", alt: "Final Frontier Security", class: "screen-attract__logo" %>
+  <h1 class="screen-attract__headline">Win a Commodore 64 Ultimate</h1>
+  <div class="screen-attract__split">
+    <ul class="screen-attract__rules">
+      <li>Winner does NOT need to be present</li>
+      <li>Prize will be shipped if necessary</li>
+    </ul>
+    <%= link_to "Enter the Raffle", enter_path, class: "btn btn--primary btn--large" %>
+  </div>
+</div>

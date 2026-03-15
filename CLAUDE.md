@@ -73,6 +73,6 @@ Three layers: SQLite database, append-only submission log, periodic USB backup (
 
 ## Design Constraints
 
-- All UI must be touch-friendly with large tap targets (10.1" touchscreen)
+- All UI must be touch-friendly with large tap targets (10.1" touchscreen, 1360x768)
 - No CRM features, no lead scoring, no marketing slides
 - Security-hardened for a security-conference audience: no autofill, no password storage, kiosk mode, localhost-only binding

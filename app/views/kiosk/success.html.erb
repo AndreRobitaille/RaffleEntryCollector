@@ -1,4 +1,12 @@
-<h1>You're entered in the raffle.</h1>
-<p>The winner will be contacted by email after CypherCon.</p>
-<p>The prize will be shipped if you are not present.</p>
-<%= link_to "Start New Entry", root_path %>
+<div class="screen-success">
+  <div class="screen-success__icon">
+    <svg viewBox="0 0 24 24">
+      <polyline points="20 6 9 17 4 12"></polyline>
+    </svg>
+  </div>
+  <h1 class="screen-success__headline">You're entered in the raffle.</h1>
+  <p class="screen-success__detail">The winner will be contacted by email after CypherCon.</p>
+  <p class="screen-success__detail">The prize will be shipped if you are not present.</p>
+  <%= link_to "Start New Entry", root_path, class: "btn btn--primary btn--large" %>
+  <%= image_tag "FF-Sec_RGB_Logo_darkmode.png", alt: "Final Frontier Security", class: "screen-success__logo" %>
+</div>

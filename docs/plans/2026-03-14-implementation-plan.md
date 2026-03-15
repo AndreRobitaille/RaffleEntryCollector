@@ -782,7 +782,7 @@ git commit -m "feat: add KioskController with attract, entry form, and success f
 
 ---
 
-## Task 6: Kiosk UI Styling and Touchscreen Layout
+## Task 6: Kiosk UI Styling and Touchscreen Layout ✅ (completed 2026-03-14)
 
 **Files:**
 - Modify: `app/views/layouts/application.html.erb`
