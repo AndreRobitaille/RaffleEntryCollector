@@ -109,4 +109,68 @@ class KioskFlowTest < ApplicationSystemTestCase
     click_button "\u00D7"
     assert_no_selector "dialog[open]"
   end
+
+  test "submitting with missing fields shows validation errors" do
+    visit enter_path
+
+    check "I confirm that I am not employed by CypherCon or a CypherCon sponsor and am eligible under the raffle rules."
+    fill_in "First name", with: "Ada"
+    # Leave other fields blank
+    click_button "Submit Entry"
+
+    assert_selector ".form-field--error", minimum: 1
+    # Form retains the value we entered
+    assert_field "First name", with: "Ada"
+  end
+
+  test "submitting with invalid email shows error" do
+    visit enter_path
+
+    check "I confirm that I am not employed by CypherCon or a CypherCon sponsor and am eligible under the raffle rules."
+    fill_in "First name", with: "Ada"
+    fill_in "Last name", with: "Lovelace"
+    fill_in "Work Email", with: "notanemail"
+    fill_in "Company", with: "Babbage"
+    fill_in "Job Title", with: "Engineer"
+
+    # Disable HTML5 native validation so the invalid email reaches the server
+    page.execute_script("document.querySelector('form').setAttribute('novalidate', true)")
+    click_button "Submit Entry"
+
+    assert_selector ".form-field--error"
+    assert_text "is invalid"
+  end
+
+  test "selected interest areas persist after submission" do
+    visit enter_path
+
+    check "I confirm that I am not employed by CypherCon or a CypherCon sponsor and am eligible under the raffle rules."
+    fill_in "First name", with: "Ada"
+    fill_in "Last name", with: "Lovelace"
+    fill_in "Work Email", with: "ada-interest@example.com"
+    fill_in "Company", with: "Babbage"
+    fill_in "Job Title", with: "Engineer"
+    check "Penetration Testing"
+    # Use JS click to avoid the sticky footer intercepting the click on this checkbox
+    page.execute_script("document.getElementById('interest_application-security').click()")
+    click_button "Submit Entry"
+
+    assert_text "You're entered in the raffle"
+    entrant = Entrant.find_by(email: "ada-interest@example.com")
+    assert_includes entrant.interest_areas, "Penetration Testing"
+    assert_includes entrant.interest_areas, "Application Security"
+  end
+
+  test "unchecking eligibility after filling form disables fields and submit" do
+    visit enter_path
+
+    check "I confirm that I am not employed by CypherCon or a CypherCon sponsor and am eligible under the raffle rules."
+    fill_in "First name", with: "Ada"
+    fill_in "Last name", with: "Lovelace"
+
+    uncheck "I confirm that I am not employed by CypherCon or a CypherCon sponsor and am eligible under the raffle rules."
+
+    assert page.has_field?("entrant[first_name]", disabled: true)
+    assert page.has_button?("Submit Entry", disabled: true)
+  end
 end
