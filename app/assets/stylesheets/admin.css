@@ -470,3 +470,54 @@ html { height: 100%; }
 .admin-btn--success:hover {
   background: var(--accent-hover);
 }
+
+/* Export page */
+.admin-export__title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 20px;
+}
+
+.admin-export__options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  max-width: 700px;
+}
+
+.admin-export__option {
+  background: var(--brand-deep);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+
+.admin-export__option-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+
+.admin-export__option-description {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.admin-export__option-count {
+  color: var(--sky);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 14px;
+}
+
+.admin-btn--primary {
+  background: var(--blue);
+  color: var(--bg);
+}
+
+.admin-btn--primary:hover {
+  background: #6e9bd8;
+}

@@ -1,1 +1,33 @@
-<h2>Export Entries</h2>
+<h2 class="admin-export__title">Export Entries</h2>
+
+<div class="admin-stats" style="max-width: 320px;">
+  <div class="admin-stat">
+    <span class="admin-stat__label">Total</span>
+    <span class="admin-stat__count"><%= @total_count %></span>
+  </div>
+  <div class="admin-stat">
+    <span class="admin-stat__label">Eligible</span>
+    <span class="admin-stat__count admin-stat__count--eligible"><%= @eligible_count %></span>
+  </div>
+</div>
+
+<div class="admin-export__options">
+  <div class="admin-export__option">
+    <h3 class="admin-export__option-title">Eligible Entries</h3>
+    <p class="admin-export__option-description">
+      Download entries eligible for the raffle only. Excludes entries marked as
+      ineligible, excluded, or flagged for duplicate review.
+    </p>
+    <p class="admin-export__option-count"><%= @eligible_count %> entries</p>
+    <%= link_to "Download CSV", admin_export_download_path(type: "eligible"), class: "admin-btn admin-btn--success" %>
+  </div>
+
+  <div class="admin-export__option">
+    <h3 class="admin-export__option-title">All Entries</h3>
+    <p class="admin-export__option-description">
+      Download all entries including excluded, duplicates, and ineligible.
+    </p>
+    <p class="admin-export__option-count"><%= @total_count %> entries</p>
+    <%= link_to "Download CSV", admin_export_download_path(type: "all"), class: "admin-btn admin-btn--primary" %>
+  </div>
+</div>

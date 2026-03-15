@@ -15,7 +15,7 @@
         <span class="admin-header__logo">&#9670; ADMIN CONSOLE</span>
         <%= link_to "Entries", admin_entries_path, class: "admin-header__link #{'admin-header__link--active' if controller_name == 'entries'}" %>
         <%# Export and Raffle links will be wired up in Issues #10 and #11 %>
-        <span class="admin-header__link" style="opacity: 0.4; cursor: default;">Export</span>
+        <%= link_to "Export", admin_export_path, class: "admin-header__link #{'admin-header__link--active' if controller_name == 'exports'}" %>
         <span class="admin-header__link" style="opacity: 0.4; cursor: default;">Raffle</span>
       </div>
       <div class="admin-header__right">
