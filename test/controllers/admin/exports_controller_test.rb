@@ -105,6 +105,10 @@ class Admin::ExportsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "INTEREST_AREA_COLUMNS covers all Entrant::INTEREST_AREA_OPTIONS" do
+    assert_equal Entrant::INTEREST_AREA_OPTIONS, Admin::ExportsController::INTEREST_AREA_COLUMNS.keys
+  end
+
   test "interest area columns reflect entrant data correctly" do
     login_as_admin
     get admin_export_download_path, params: { type: "eligible" }
