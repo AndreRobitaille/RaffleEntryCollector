@@ -125,4 +125,46 @@ class Admin::ExportsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "1", diana_row["space_systems_security"]
     assert_equal "0", diana_row["penetration_testing"]
   end
+
+  test "CSV handles special characters in entry data" do
+    login_as_admin
+    Entrant.create!(
+      first_name: "O'Brien", last_name: "Smith, Jr.", email: "ob@example.com",
+      company: "Acme \"Corp\"", job_title: "Engineer", eligibility_confirmed: true
+    )
+
+    get admin_export_download_path, params: { type: "all" }
+    csv = CSV.parse(response.body, headers: true)
+    row = csv.find { |r| r["email"] == "ob@example.com" }
+
+    assert_equal "O'Brien", row["first_name"]
+    assert_equal "Smith, Jr.", row["last_name"]
+    assert_equal "Acme \"Corp\"", row["company"]
+  end
+
+  test "CSV export with no eligible entries returns headers only" do
+    login_as_admin
+    Entrant.update_all(eligibility_status: "excluded_admin")
+
+    get admin_export_download_path, params: { type: "eligible" }
+    assert_response :success
+    csv = CSV.parse(response.body, headers: true)
+    assert_equal 0, csv.length
+    assert csv.headers.include?("first_name")
+  end
+
+  test "CSV export handles 100 entries" do
+    login_as_admin
+    100.times do |i|
+      Entrant.create!(
+        first_name: "User#{i}", last_name: "Test", email: "user#{i}@load.com",
+        company: "LoadCo", job_title: "Dev", eligibility_confirmed: true
+      )
+    end
+
+    get admin_export_download_path, params: { type: "all" }
+    assert_response :success
+    csv = CSV.parse(response.body, headers: true)
+    assert csv.length >= 100
+  end
 end
