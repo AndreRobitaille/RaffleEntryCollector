@@ -59,4 +59,28 @@ class RaffleDrawTest < ActiveSupport::TestCase
     second_draw = RaffleDraw.perform_draw!
     assert_equal "alternate_winner", second_draw.draw_type
   end
+
+  test "rejects eligible_count of zero" do
+    entrant = Entrant.create!(first_name: "A", last_name: "A", email: "a@x.com",
+                              company: "X", job_title: "X", eligibility_confirmed: true)
+    draw = RaffleDraw.new(winner: entrant, eligible_count: 0, draw_type: "winner")
+    assert_not draw.valid?
+    assert_includes draw.errors[:eligible_count], "must be greater than 0"
+  end
+
+  test "rejects invalid draw_type" do
+    entrant = Entrant.create!(first_name: "A", last_name: "A", email: "a@x.com",
+                              company: "X", job_title: "X", eligibility_confirmed: true)
+    draw = RaffleDraw.new(winner: entrant, eligible_count: 5, draw_type: "invalid")
+    assert_not draw.valid?
+    assert_includes draw.errors[:draw_type], "is not included in the list"
+  end
+
+  test "rejects nil eligible_count" do
+    entrant = Entrant.create!(first_name: "A", last_name: "A", email: "a@x.com",
+                              company: "X", job_title: "X", eligibility_confirmed: true)
+    draw = RaffleDraw.new(winner: entrant, eligible_count: nil, draw_type: "winner")
+    assert_not draw.valid?
+    assert draw.errors[:eligible_count].any?
+  end
 end

@@ -3,7 +3,7 @@ class RaffleDraw < ApplicationRecord
 
   belongs_to :winner, class_name: "Entrant"
 
-  validates :eligible_count, presence: true
+  validates :eligible_count, presence: true, numericality: { greater_than: 0 }
   validates :draw_type, inclusion: { in: %w[winner alternate_winner] }
 
   def self.perform_draw!(admin_note: nil)
