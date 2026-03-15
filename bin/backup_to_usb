@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Called by cron every 5 minutes to back up to USB if present
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+RAILS_ENV="${RAILS_ENV:-production}"
+
+exec bin/rails runner "UsbBackup.perform"
