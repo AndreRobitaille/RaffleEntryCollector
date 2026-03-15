@@ -25,7 +25,7 @@ class KioskControllerTest < ActionDispatch::IntegrationTest
           company: "Babbage Inc",
           job_title: "Engineer",
           eligibility_confirmed: "1",
-          interest_areas: ["Penetration Testing"]
+          interest_areas: [ "Penetration Testing" ]
         }
       }
     end
