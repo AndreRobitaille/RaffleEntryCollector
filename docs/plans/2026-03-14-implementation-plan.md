@@ -544,7 +544,7 @@ git commit -m "feat: add SubmissionLogger for JSONL append-only audit log"
 
 ---
 
-## Task 5: Kiosk Controller and Routes
+## Task 5: Kiosk Controller and Routes ✅ (completed 2026-03-14)
 
 **Files:**
 - Create: `app/controllers/kiosk_controller.rb`

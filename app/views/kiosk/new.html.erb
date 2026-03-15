@@ -1,0 +1,55 @@
+<%= form_with(model: @entrant, url: enter_path) do |f| %>
+  <% if @entrant.errors.any? %>
+    <div id="error_explanation">
+      <ul>
+        <% @entrant.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= f.check_box :eligibility_confirmed %>
+    <%= f.label :eligibility_confirmed, "I confirm that I am not employed by CypherCon or a CypherCon sponsor and am eligible under the raffle rules." %>
+  </div>
+
+  <div>
+    <%= f.label :first_name %>
+    <%= f.text_field :first_name %>
+  </div>
+
+  <div>
+    <%= f.label :last_name %>
+    <%= f.text_field :last_name %>
+  </div>
+
+  <div>
+    <%= f.label :email, "Work Email" %>
+    <%= f.email_field :email %>
+  </div>
+
+  <div>
+    <%= f.label :company, "Company (or School / Independent)" %>
+    <%= f.text_field :company %>
+  </div>
+
+  <div>
+    <%= f.label :job_title, "Job Title (or Student / Researcher / etc.)" %>
+    <%= f.text_field :job_title %>
+  </div>
+
+  <fieldset>
+    <legend>Interest Areas (optional)</legend>
+    <% Entrant::INTEREST_AREA_OPTIONS.each do |area| %>
+      <div>
+        <%= check_box_tag "entrant[interest_areas][]", area, @entrant.interest_areas.include?(area) %>
+        <%= label_tag nil, area %>
+      </div>
+    <% end %>
+  </fieldset>
+
+  <%= f.submit "Submit Entry" %>
+<% end %>
+
+<button type="button">Rules & Drawing Info</button>
