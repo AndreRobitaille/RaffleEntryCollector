@@ -31,6 +31,7 @@ class Entrant < ApplicationRecord
 
   scope :eligible, -> { where(eligibility_status: %w[eligible reinstated_admin]) }
   scope :duplicates, -> { where(eligibility_status: "duplicate_review") }
+  scope :excluded, -> { where(eligibility_status: "excluded_admin") }
 
   private
 

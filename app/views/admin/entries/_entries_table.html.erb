@@ -1,0 +1,45 @@
+<% sort_link = ->(column, label) do
+  next_dir = (@sort_column == column.to_s && @sort_direction == "asc") ? "desc" : "asc"
+  indicator = if @sort_column == column.to_s
+    @sort_direction == "asc" ? " ▲" : " ▼"
+  else
+    ""
+  end
+  active_class = @sort_column == column.to_s ? "admin-table__th--active" : ""
+  link_to "#{label}#{indicator}",
+    admin_entries_path(sort: column, dir: next_dir, q: @query),
+    class: "admin-table__sort #{active_class}"
+end %>
+
+<table class="admin-table">
+  <thead>
+    <tr>
+      <th class="admin-table__th admin-table__th--view"></th>
+      <th class="admin-table__th"><%= sort_link.call(:first_name, "First") %></th>
+      <th class="admin-table__th"><%= sort_link.call(:last_name, "Last") %></th>
+      <th class="admin-table__th"><%= sort_link.call(:company, "Company") %></th>
+      <th class="admin-table__th"><%= sort_link.call(:eligibility_status, "Status") %></th>
+      <th class="admin-table__th"><%= sort_link.call(:email, "Email") %></th>
+      <th class="admin-table__th"><%= sort_link.call(:created_at, "Date") %></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @entrants.each do |entrant| %>
+      <tr class="admin-table__row">
+        <td class="admin-table__td admin-table__td--view">
+          <%= link_to "View", admin_entry_path(entrant), class: "admin-table__view-btn" %>
+        </td>
+        <td class="admin-table__td"><%= entrant.first_name %></td>
+        <td class="admin-table__td"><%= entrant.last_name %></td>
+        <td class="admin-table__td"><%= entrant.company %></td>
+        <td class="admin-table__td">
+          <span class="admin-status-pill admin-status-pill--<%= entrant.eligibility_status %>">
+            <%= entrant.eligibility_status %>
+          </span>
+        </td>
+        <td class="admin-table__td admin-table__td--email"><%= entrant.email %></td>
+        <td class="admin-table__td admin-table__td--date"><%= entrant.created_at.strftime("%b %d, %H:%M") %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

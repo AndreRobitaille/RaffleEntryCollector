@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "Admin — Raffle Entry Collector" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= stylesheet_link_tag :app, "admin" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body class="admin-body">
+    <header class="admin-header">
+      <div class="admin-header__left">
+        <span class="admin-header__logo">&#9670; ADMIN CONSOLE</span>
+        <%= link_to "Entries", admin_entries_path, class: "admin-header__link #{'admin-header__link--active' if controller_name == 'entries'}" %>
+        <%# Export and Raffle links will be wired up in Issues #10 and #11 %>
+        <span class="admin-header__link" style="opacity: 0.4; cursor: default;">Export</span>
+        <span class="admin-header__link" style="opacity: 0.4; cursor: default;">Raffle</span>
+      </div>
+      <div class="admin-header__right">
+        <%= button_to "Logout", admin_logout_path, method: :delete, class: "admin-header__link" %>
+      </div>
+    </header>
+
+    <% if flash[:notice] %>
+      <div class="admin-flash admin-flash--notice"><%= flash[:notice] %></div>
+    <% end %>
+    <% if flash[:alert] %>
+      <div class="admin-flash admin-flash--alert"><%= flash[:alert] %></div>
+    <% end %>
+
+    <main class="admin-main">
+      <%= yield %>
+    </main>
+  </body>
+</html>

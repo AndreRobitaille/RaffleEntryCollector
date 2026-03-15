@@ -20,3 +20,45 @@ grace:
   eligibility_status: eligible
   interest_areas:
     - "Security Training"
+
+duplicate_alan:
+  first_name: Alan
+  last_name: Turing
+  email: alan@example.com
+  company: Bletchley Park
+  job_title: Cryptanalyst
+  eligibility_confirmed: true
+  eligibility_status: duplicate_review
+  interest_areas:
+    - "Hardware / IoT Security"
+
+excluded_eve:
+  first_name: Eve
+  last_name: Hacker
+  email: eve@sponsor.com
+  company: CypherCon Sponsor LLC
+  job_title: Marketing
+  eligibility_confirmed: true
+  eligibility_status: excluded_admin
+  exclusion_reason: CypherCon sponsor employee
+  interest_areas: []
+
+winner_carol:
+  first_name: Carol
+  last_name: Winner
+  email: carol@example.com
+  company: Acme Corp
+  job_title: Director
+  eligibility_confirmed: true
+  eligibility_status: winner
+  interest_areas: []
+
+ineligible_bob:
+  first_name: Bob
+  last_name: Nocheck
+  email: bob@example.com
+  company: Independent
+  job_title: Student
+  eligibility_confirmed: true
+  eligibility_status: self_attested_ineligible
+  interest_areas: []

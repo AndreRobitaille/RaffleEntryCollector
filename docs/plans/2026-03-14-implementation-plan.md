@@ -1008,7 +1008,7 @@ git commit -m "feat: add Stimulus controllers for eligibility gate, idle timeout
 
 ---
 
-## Task 8: Admin Authentication
+## Task 8: Admin Authentication ✅ (completed 2026-03-15)
 
 **Files:**
 - Create: `app/controllers/admin/base_controller.rb`
@@ -1172,7 +1172,7 @@ git commit -m "feat: add admin authentication with session-based password"
 
 ---
 
-## Task 9: Admin Entries Management
+## Task 9: Admin Entries Management ✅ (completed 2026-03-15)
 
 **Files:**
 - Create: `app/controllers/admin/entries_controller.rb`

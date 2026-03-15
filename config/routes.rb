@@ -10,6 +10,13 @@ Rails.application.routes.draw do
     get "login", to: "sessions#new"
     post "login", to: "sessions#create"
     delete "logout", to: "sessions#destroy"
+
+    resources :entries, only: [ :index, :show ] do
+      member do
+        patch :exclude
+        patch :reinstate
+      end
+    end
   end
 
   get "up" => "rails/health#show", as: :rails_health_check

@@ -1,2 +1,24 @@
-<h1>Admin Dashboard</h1>
-<p>Entries management coming soon.</p>
+<div class="admin-stats">
+  <div class="admin-stat">
+    <span class="admin-stat__label">Total</span>
+    <span class="admin-stat__count"><%= @total_count %></span>
+  </div>
+  <div class="admin-stat">
+    <span class="admin-stat__label">Eligible</span>
+    <span class="admin-stat__count admin-stat__count--eligible"><%= @eligible_count %></span>
+  </div>
+  <div class="admin-stat">
+    <span class="admin-stat__label">Excluded</span>
+    <span class="admin-stat__count admin-stat__count--excluded"><%= @excluded_count %></span>
+  </div>
+  <div class="admin-stat">
+    <span class="admin-stat__label">Duplicates</span>
+    <span class="admin-stat__count admin-stat__count--duplicate"><%= @duplicate_count %></span>
+  </div>
+</div>
+
+<%= form_with url: admin_entries_path, method: :get do |f| %>
+  <%= f.search_field :q, value: @query, placeholder: "Search by name, email, or company...", class: "admin-search__input" %>
+<% end %>
+
+<%= render "entries_table" %>

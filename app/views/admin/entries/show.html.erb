@@ -1,0 +1,108 @@
+<div class="admin-show">
+  <%= link_to "← Back to Entries", admin_entries_path, class: "admin-back-link" %>
+
+  <div class="admin-show__header">
+    <h2><%= @entrant.first_name %> <%= @entrant.last_name %></h2>
+    <span class="admin-status-pill admin-status-pill--<%= @entrant.eligibility_status %>">
+      <%= @entrant.eligibility_status %>
+    </span>
+  </div>
+
+  <div class="admin-detail-card">
+    <div class="admin-detail-grid">
+      <div class="admin-detail__field">
+        <span class="admin-detail__label">First Name</span>
+        <span class="admin-detail__value"><%= @entrant.first_name %></span>
+      </div>
+      <div class="admin-detail__field">
+        <span class="admin-detail__label">Last Name</span>
+        <span class="admin-detail__value"><%= @entrant.last_name %></span>
+      </div>
+      <div class="admin-detail__field">
+        <span class="admin-detail__label">Email</span>
+        <span class="admin-detail__value"><%= @entrant.email %></span>
+      </div>
+      <div class="admin-detail__field">
+        <span class="admin-detail__label">Company</span>
+        <span class="admin-detail__value"><%= @entrant.company %></span>
+      </div>
+      <div class="admin-detail__field">
+        <span class="admin-detail__label">Job Title</span>
+        <span class="admin-detail__value"><%= @entrant.job_title %></span>
+      </div>
+      <div class="admin-detail__field">
+        <span class="admin-detail__label">Entered</span>
+        <span class="admin-detail__value"><%= @entrant.created_at.strftime("%b %d, %Y at %l:%M %p") %></span>
+      </div>
+    </div>
+
+    <% if @entrant.interest_areas.any? %>
+      <div class="admin-detail__section">
+        <span class="admin-detail__label">Interest Areas</span>
+        <div class="admin-interest-tags">
+          <% @entrant.interest_areas.each do |area| %>
+            <span class="admin-interest-tag"><%= area %></span>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <% if @entrant.exclusion_reason.present? %>
+      <div class="admin-detail__section">
+        <span class="admin-detail__label">Exclusion Reason</span>
+        <span class="admin-detail__value admin-detail__value--excluded"><%= @entrant.exclusion_reason %></span>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Action area — contextual based on eligibility status %>
+  <% case @entrant.eligibility_status %>
+  <% when "eligible", "reinstated_admin" %>
+    <div class="admin-action admin-action--exclude">
+      <span class="admin-action__title">Exclude This Entry</span>
+      <%= form_with url: exclude_admin_entry_path(@entrant), method: :patch, class: "admin-action__form" do |f| %>
+        <div class="admin-action__field">
+          <%= f.label :exclusion_reason, "Reason", class: "admin-action__label" %>
+          <%= f.text_field :exclusion_reason, placeholder: "e.g. CypherCon sponsor employee", class: "admin-action__input" %>
+        </div>
+        <%= f.submit "Exclude", class: "admin-btn admin-btn--danger" %>
+      <% end %>
+    </div>
+
+  <% when "duplicate_review" %>
+    <div class="admin-action admin-action--exclude">
+      <span class="admin-action__title">Exclude This Entry</span>
+      <%= form_with url: exclude_admin_entry_path(@entrant), method: :patch, class: "admin-action__form" do |f| %>
+        <div class="admin-action__field">
+          <%= f.label :exclusion_reason, "Reason", class: "admin-action__label" %>
+          <%= f.text_field :exclusion_reason, placeholder: "e.g. Confirmed duplicate", class: "admin-action__input" %>
+        </div>
+        <%= f.submit "Exclude", class: "admin-btn admin-btn--danger" %>
+      <% end %>
+    </div>
+
+    <div class="admin-action admin-action--reinstate">
+      <div class="admin-action__info">
+        <span class="admin-action__title">Reinstate This Entry</span>
+        <span class="admin-action__description">Clears the duplicate flag and restores to eligible</span>
+      </div>
+      <%= button_to "Reinstate", reinstate_admin_entry_path(@entrant), method: :patch, class: "admin-btn admin-btn--success" %>
+    </div>
+
+  <% when "excluded_admin" %>
+    <div class="admin-action admin-action--reinstate">
+      <div class="admin-action__info">
+        <span class="admin-action__title">Reinstate This Entry</span>
+        <span class="admin-action__description">Returns status to eligible and clears exclusion reason</span>
+      </div>
+      <%= button_to "Reinstate", reinstate_admin_entry_path(@entrant), method: :patch, class: "admin-btn admin-btn--success" %>
+    </div>
+
+  <% when "self_attested_ineligible" %>
+    <div class="admin-action admin-action--info">
+      <p>This person did not confirm eligibility.</p>
+    </div>
+
+  <%# winner, alternate_winner — no actions %>
+  <% end %>
+</div>
