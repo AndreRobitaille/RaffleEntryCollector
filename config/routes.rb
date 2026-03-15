@@ -17,6 +17,9 @@ Rails.application.routes.draw do
         patch :reinstate
       end
     end
+
+    get "export", to: "exports#index", as: :export
+    get "export/download", to: "exports#download", as: :export_download
   end
 
   get "up" => "rails/health#show", as: :rails_health_check
