@@ -15,7 +15,7 @@ class SubmissionLoggerTest < ActiveSupport::TestCase
     entrant = Entrant.create!(
       first_name: "Ada", last_name: "Lovelace", email: "ada@example.com",
       company: "Babbage", job_title: "Eng", eligibility_confirmed: true,
-      interest_areas: ["Application Security"]
+      interest_areas: [ "Application Security" ]
     )
 
     SubmissionLogger.log(entrant, log_path: @log_path)
@@ -26,7 +26,7 @@ class SubmissionLoggerTest < ActiveSupport::TestCase
     data = JSON.parse(lines.first)
     assert_equal "Ada", data["first_name"]
     assert_equal "ada@example.com", data["email"]
-    assert_equal ["Application Security"], data["interest_areas"]
+    assert_equal [ "Application Security" ], data["interest_areas"]
     assert data.key?("logged_at")
   end
 
