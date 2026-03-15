@@ -144,4 +144,81 @@ class EntrantTest < ActiveSupport::TestCase
 
     assert_includes entrant.raffle_draws, draw
   end
+
+  test "valid with standard symbols in company and job_title" do
+    entrant = Entrant.new(
+      first_name: "Mary-Jane",
+      last_name: "O'Brien",
+      email: "mj@example.com",
+      company: "AT&T (Corp.)",
+      job_title: "Sr. Engineer / Team Lead",
+      eligibility_confirmed: true
+    )
+    assert entrant.valid?
+  end
+
+  test "rejects emoji in first_name" do
+    entrant = Entrant.new(
+      first_name: "Ada \u{1F600}",
+      last_name: "Lovelace",
+      email: "ada@example.com",
+      company: "X",
+      job_title: "X",
+      eligibility_confirmed: true
+    )
+    assert_not entrant.valid?
+    assert_includes entrant.errors[:first_name], "may only contain standard characters (letters, numbers, and common symbols)"
+  end
+
+  test "rejects accented characters in last_name" do
+    entrant = Entrant.new(
+      first_name: "Rene",
+      last_name: "Descartes\u00E9",
+      email: "rene@example.com",
+      company: "X",
+      job_title: "X",
+      eligibility_confirmed: true
+    )
+    assert_not entrant.valid?
+    assert_includes entrant.errors[:last_name], "may only contain standard characters (letters, numbers, and common symbols)"
+  end
+
+  test "rejects CJK characters in company" do
+    entrant = Entrant.new(
+      first_name: "Test",
+      last_name: "User",
+      email: "test@example.com",
+      company: "\u4E2D\u6587\u516C\u53F8",
+      job_title: "X",
+      eligibility_confirmed: true
+    )
+    assert_not entrant.valid?
+    assert_includes entrant.errors[:company], "may only contain standard characters (letters, numbers, and common symbols)"
+  end
+
+  test "rejects null byte in job_title" do
+    entrant = Entrant.new(
+      first_name: "Test",
+      last_name: "User",
+      email: "test@example.com",
+      company: "X",
+      job_title: "Engineer\x00Admin",
+      eligibility_confirmed: true
+    )
+    assert_not entrant.valid?
+    assert_includes entrant.errors[:job_title], "may only contain standard characters (letters, numbers, and common symbols)"
+  end
+
+  test "rejects newline in first_name" do
+    entrant = Entrant.new(
+      first_name: "Ada\nLovelace",
+      last_name: "X",
+      email: "ada@example.com",
+      company: "X",
+      job_title: "X",
+      eligibility_confirmed: true
+    )
+    assert_not entrant.valid?
+    assert_includes entrant.errors[:first_name], "may only contain standard characters (letters, numbers, and common symbols)"
+  end
 end

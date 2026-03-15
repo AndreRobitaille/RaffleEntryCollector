@@ -19,11 +19,14 @@ class Entrant < ApplicationRecord
     "Security Training"
   ].freeze
 
-  validates :first_name, presence: true
-  validates :last_name, presence: true
+  PRINTABLE_ASCII = /\A[ -~]*\z/.freeze
+  PRINTABLE_ASCII_MESSAGE = "may only contain standard characters (letters, numbers, and common symbols)".freeze
+
+  validates :first_name, presence: true, format: { with: PRINTABLE_ASCII, message: PRINTABLE_ASCII_MESSAGE }
+  validates :last_name, presence: true, format: { with: PRINTABLE_ASCII, message: PRINTABLE_ASCII_MESSAGE }
   validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
-  validates :company, presence: true
-  validates :job_title, presence: true
+  validates :company, presence: true, format: { with: PRINTABLE_ASCII, message: PRINTABLE_ASCII_MESSAGE }
+  validates :job_title, presence: true, format: { with: PRINTABLE_ASCII, message: PRINTABLE_ASCII_MESSAGE }
   validates :eligibility_confirmed, acceptance: { accept: true }, on: :create
   validates :eligibility_status, inclusion: { in: ELIGIBILITY_STATUSES }
 
