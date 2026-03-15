@@ -834,7 +834,7 @@ git commit -m "feat: add kiosk UI styling with touch-friendly layout and rules m
 
 ---
 
-## Task 7: Stimulus Controllers (Eligibility Gate, Idle Timeout, Modal)
+## Task 7: Stimulus Controllers (Eligibility Gate, Idle Timeout, Modal) ✅ (completed 2026-03-15)
 
 **Files:**
 - Create: `app/javascript/controllers/eligibility_controller.js`
