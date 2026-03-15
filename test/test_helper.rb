@@ -16,11 +16,7 @@ end
 
 module AdminTestHelper
   def login_as_admin
-    post admin_login_path, params: { password: admin_password }
-  end
-
-  def admin_password
-    Rails.application.credentials.admin_password || ENV.fetch("ADMIN_PASSWORD", "changeme")
+    post admin_login_path, params: { password: Admin::Authentication::DEV_PASSWORD }
   end
 end
 

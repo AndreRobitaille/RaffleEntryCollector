@@ -1,13 +1,23 @@
 class Admin::SessionsController < ApplicationController
+  include Admin::Authentication
+
+  skip_before_action :check_admin_password_configured, only: [ :destroy ]
+
   def new
   end
 
   def create
-    if ActiveSupport::SecurityUtils.secure_compare(params[:password].to_s, admin_password)
+    password = admin_password
+    if password.nil?
+      redirect_to admin_login_path, alert: "Admin not configured."
+      return
+    end
+
+    if ActiveSupport::SecurityUtils.secure_compare(params[:password].to_s, password)
       session[:admin_authenticated] = true
       redirect_to admin_root_path
     else
-      flash.now[:alert] = "Invalid password"
+      flash.now[:alert] = "Invalid password."
       render :new, status: :unprocessable_entity
     end
   end
@@ -15,11 +25,5 @@ class Admin::SessionsController < ApplicationController
   def destroy
     session.delete(:admin_authenticated)
     redirect_to admin_login_path
-  end
-
-  private
-
-  def admin_password
-    Rails.application.credentials.admin_password || ENV.fetch("ADMIN_PASSWORD", "changeme")
   end
 end
