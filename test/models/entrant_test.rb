@@ -112,4 +112,36 @@ class EntrantTest < ActiveSupport::TestCase
     assert_not_includes result, duplicate
     assert_not_includes result, winner
   end
+
+  test "scope duplicates returns only duplicate_review entries" do
+    attrs = { company: "X", job_title: "X", eligibility_confirmed: true }
+    duplicate = Entrant.create!(first_name: "A", last_name: "A", email: "a@x.com", eligibility_status: "duplicate_review", **attrs)
+    eligible = Entrant.create!(first_name: "B", last_name: "B", email: "b@x.com", eligibility_status: "eligible", **attrs)
+    excluded = Entrant.create!(first_name: "C", last_name: "C", email: "c@x.com", eligibility_status: "excluded_admin", **attrs)
+
+    result = Entrant.duplicates
+    assert_includes result, duplicate
+    assert_not_includes result, eligible
+    assert_not_includes result, excluded
+  end
+
+  test "scope excluded returns only excluded_admin entries" do
+    attrs = { company: "X", job_title: "X", eligibility_confirmed: true }
+    excluded = Entrant.create!(first_name: "A", last_name: "A", email: "a@x.com", eligibility_status: "excluded_admin", **attrs)
+    eligible = Entrant.create!(first_name: "B", last_name: "B", email: "b@x.com", eligibility_status: "eligible", **attrs)
+    duplicate = Entrant.create!(first_name: "C", last_name: "C", email: "c@x.com", eligibility_status: "duplicate_review", **attrs)
+
+    result = Entrant.excluded
+    assert_includes result, excluded
+    assert_not_includes result, eligible
+    assert_not_includes result, duplicate
+  end
+
+  test "has_many raffle_draws returns draws where entrant is winner" do
+    attrs = { company: "X", job_title: "X", eligibility_confirmed: true }
+    entrant = Entrant.create!(first_name: "A", last_name: "A", email: "a@x.com", **attrs)
+    draw = RaffleDraw.create!(winner: entrant, eligible_count: 5, draw_type: "winner")
+
+    assert_includes entrant.raffle_draws, draw
+  end
 end
