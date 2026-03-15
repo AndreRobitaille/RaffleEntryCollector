@@ -330,7 +330,7 @@ git commit -m "feat: add Entrant model with validations, scopes, and migration"
 
 ---
 
-## Task 3: Duplicate Detection Service
+## Task 3: Duplicate Detection Service ✅ (completed 2026-03-14)
 
 **Files:**
 - Create: `app/services/duplicate_detector.rb`
