@@ -12,7 +12,7 @@ class UsbBackup
     db_path = ActiveRecord::Base.connection_db_config.database
     backup_db_path = File.join(target_dir, "raffle.sqlite3")
 
-    unless system("sqlite3", db_path, ".backup '#{backup_db_path}'")
+    unless backup_database(db_path, backup_db_path)
       return failure("sqlite3 backup command failed")
     end
 
@@ -39,6 +39,11 @@ class UsbBackup
     mount_point = stdout.strip
     status.success? && !mount_point.empty? ? mount_point : nil
   end
+
+  def self.backup_database(db_path, backup_db_path)
+    system("sqlite3", db_path, ".backup '#{backup_db_path}'")
+  end
+  private_class_method :backup_database
 
   def self.failure(message)
     { success: false, error: message }
