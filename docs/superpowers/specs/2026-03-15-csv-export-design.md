@@ -12,9 +12,11 @@ Add CSV export functionality to the admin console with two export modes: eligibl
 Two new routes in the admin namespace:
 
 ```ruby
-get "export", to: "exports#index"
-get "export/download", to: "exports#download"
+get "export", to: "exports#index", as: :export
+get "export/download", to: "exports#download", as: :export_download
 ```
+
+Route helpers: `admin_export_path` and `admin_export_download_path`.
 
 ## Controller
 
@@ -55,7 +57,9 @@ Fixed fields:
 | `created_at` | `entrant.created_at` |
 | `eligibility_status` | `entrant.eligibility_status` |
 
-Interest area columns (one per area, `1` or `0`):
+Interest area columns — one per entry in `Entrant::INTEREST_AREA_OPTIONS`, dynamically derived (not hardcoded). Each column contains `1` or `0`, computed as `entrant.interest_areas.include?(area) ? 1 : 0`.
+
+Current interest areas and their column names:
 
 | Column | Interest Area |
 |--------|---------------|
@@ -69,6 +73,8 @@ Interest area columns (one per area, `1` or `0`):
 
 Column order: fixed fields first, then interest area columns.
 
+The column name mapping (display name to snake_case header) should be defined in the controller or as a constant, derived from `Entrant::INTEREST_AREA_OPTIONS`.
+
 ## Export Page UI
 
 Located at `/admin/export`. Wires up the currently-disabled "Export" nav link in the admin layout.
@@ -77,7 +83,7 @@ Page content:
 
 - Entry counts: total and eligible
 - Two download buttons with descriptions:
-  - **"Eligible Entries"** — "Download entries eligible for the raffle (excludes disqualified and duplicate-flagged entries)"
+  - **"Eligible Entries"** — "Download entries eligible for the raffle only. Excludes entries marked as ineligible, excluded, or flagged for duplicate review."
   - **"All Entries"** — "Download all entries including excluded, duplicates, and ineligible"
 - Styled consistently with existing admin pages (same card/button patterns)
 
@@ -87,8 +93,10 @@ Controller tests for `Admin::ExportsController`:
 
 - `download` with `type=eligible` returns only eligible/reinstated entries
 - `download` with `type=all` returns all entries
+- `download` with invalid or missing type defaults to eligible
 - Response content type is `text/csv`
 - Response has correct Content-Disposition with filename and timestamp
+- CSV header row contains the expected column names in the correct order
 - Interest area columns contain `1`/`0` values
 - `index` renders successfully when authenticated
 - Unauthenticated requests redirect to login (inherited from BaseController)
