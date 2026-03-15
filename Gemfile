@@ -26,4 +26,5 @@ end
 group :test do
   gem "capybara"
   gem "selenium-webdriver"
+  gem "minitest-mock"
 end
