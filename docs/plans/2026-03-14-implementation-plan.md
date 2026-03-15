@@ -1404,7 +1404,7 @@ git commit -m "feat: add admin entries management with search, exclude, reinstat
 
 ---
 
-## Task 10: CSV Export
+## Task 10: CSV Export ✅ (completed 2026-03-15)
 
 **Files:**
 - Modify: `app/controllers/admin/entries_controller.rb`
