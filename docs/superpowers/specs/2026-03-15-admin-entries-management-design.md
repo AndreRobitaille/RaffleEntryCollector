@@ -34,6 +34,8 @@ This produces:
 - `PATCH /admin/entries/:id/exclude` — exclude
 - `PATCH /admin/entries/:id/reinstate` — reinstate
 
+**Note:** The existing `root "entries#index"` line in the admin namespace must remain — do not duplicate it. The `resources` block adds the named `admin_entries_path` helpers alongside the existing `admin_root_path`.
+
 ## Controller: Admin::EntriesController
 
 Inherits from `Admin::BaseController` (auth handled by `before_action :require_admin`).
@@ -53,13 +55,11 @@ Inherits from `Admin::BaseController` (auth handled by `before_action :require_a
 - Renders full detail view with contextual action area (exclude form or reinstate button)
 
 **`exclude`**
-- Sets `eligibility_status` to `excluded_admin`
-- Saves `exclusion_reason` from params
+- Uses `entry.update(eligibility_status: "excluded_admin", exclusion_reason: params[:exclusion_reason])` — keep validations active so `eligibility_status` inclusion check remains enforced
 - Redirects back to show page with flash notice
 
 **`reinstate`**
-- Sets `eligibility_status` to `reinstated_admin`
-- Clears `exclusion_reason`
+- Uses `entry.update(eligibility_status: "reinstated_admin", exclusion_reason: nil)` — keep validations active
 - Redirects back to show page with flash notice
 
 ## Views
