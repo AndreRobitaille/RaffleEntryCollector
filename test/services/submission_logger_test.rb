@@ -3,7 +3,7 @@ require "json"
 
 class SubmissionLoggerTest < ActiveSupport::TestCase
   setup do
-    @log_path = Rails.root.join("tmp", "test_submissions.jsonl")
+    @log_path = Rails.root.join("tmp", "test_submissions_#{name}.jsonl")
     @log_path.delete if @log_path.exist?
   end
 
