@@ -23,11 +23,11 @@
 
 ## Section 1: Fix Failing UsbBackup Test
 
-**Problem:** `UsbBackup.perform` calls the `sqlite3` CLI to do a `.backup` command. In parallel test execution, the test DB may be locked or inaccessible to the CLI tool. The JSONL copy test doesn't care about the sqlite3 backup — it just wants to verify the log file gets copied.
+**Problem:** `UsbBackup.perform` calls the `sqlite3` CLI inline. This causes noisy stderr output in tests ("Error: cannot open...") and intermittent failures under parallel execution when the test DB is locked. The JSONL copy test doesn't care about the sqlite3 backup — it just wants to verify the log file gets copied.
 
 **Fix:**
 - Extract the sqlite3 backup step into a private method (`backup_database`) on `UsbBackup`
-- In tests that aren't specifically testing the backup command, stub `backup_database` to return `true`
+- In tests that aren't specifically testing the backup command, stub `backup_database` to return `true` — eliminates noisy side effects and improves test isolation
 - The "performs backup when target dir exists" and "sqlite3 failure" tests keep the real CLI call
 - The JSONL test stubs the backup so it can focus on log file copying behavior in isolation
 
@@ -46,6 +46,7 @@
 ### RaffleDraw Validations
 - Test `validates :draw_type, inclusion:` rejects invalid values
 - Test `validates :eligible_count` rejects nil/missing values
+- Add `numericality: { greater_than: 0 }` validation to `eligible_count` (defense-in-depth — `perform_draw!` already guards against 0, but the model should enforce it too) and test that `eligible_count: 0` is rejected
 
 ---
 
@@ -58,13 +59,13 @@
 - Page param combined with search filters
 
 ### Entries Edge Cases
-- Show for non-existent entry (404/redirect behavior)
+- Show for non-existent entry — expect `ActiveRecord::RecordNotFound` (Rails returns 404 in production)
 - Sorting by invalid column falls back to default
 - Search with special characters works (quotes, ampersands return results normally)
 - Search input is properly sanitized — verify no raw HTML/SQL passes through to the response (XSS/injection protection)
 
 ### Raffle Controller
-- Draw with 0 eligible entries shows appropriate error
+- *(Already tested: draw with 0 eligible entries shows error)*
 - Draw when only 1 eligible entry remaining — that entry becomes winner, then next draw attempt fails (no remaining eligible entries for alternates)
 
 ---
@@ -97,13 +98,13 @@
 - Handles standard US characters correctly (alphanumeric, common symbols like `@`, `-`, `'`, `.`, `&`)
 
 ### DuplicateDetector
-- Whitespace in email is handled (trimmed before comparison)
-- Nil/blank company doesn't cause false name+company match
+- Document that whitespace-padded email does NOT currently match its trimmed counterpart (confirms #23 is needed)
+- *(Already tested: nil/blank company returns safely — see existing "returns safely when entrant has blank fields" test)*
 
 ### CSV Export (via controller tests)
 - Special characters in entry data (commas, quotes) produce valid CSV
 - Empty result set returns CSV with just headers
-- Large dataset (200+ entries) exports without error
+- Moderate dataset (100 entries) exports without error
 
 ---
 
