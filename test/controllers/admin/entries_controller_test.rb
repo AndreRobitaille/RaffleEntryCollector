@@ -208,4 +208,63 @@ class Admin::EntriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".admin-stat__label", text: "USB Backup"
   end
+
+  # Pagination tests (Task 7)
+
+  test "GET /admin/entries page 1 returns entries" do
+    login_as_admin
+    get admin_entries_path, params: { page: 1 }
+    assert_response :success
+    assert_select "table tbody tr", minimum: 1
+  end
+
+  test "GET /admin/entries page 2 returns next batch after creating enough entries" do
+    login_as_admin
+    51.times do |i|
+      Entrant.create!(first_name: "Page#{i}", last_name: "Test", email: "page#{i}@x.com",
+                      company: "X", job_title: "X", eligibility_confirmed: true)
+    end
+    get admin_entries_path, params: { page: 2 }
+    assert_response :success
+    # Page 2 should have the overflow entries (total > 50, so page 2 is non-empty)
+    assert_select "table tbody tr", minimum: 1
+  end
+
+  test "GET /admin/entries out-of-range page returns empty table body" do
+    login_as_admin
+    get admin_entries_path, params: { page: 999 }
+    assert_response :success
+    assert_select "table tbody tr", count: 0
+  end
+
+  test "GET /admin/entries page param combined with search" do
+    login_as_admin
+    get admin_entries_path, params: { q: "Ada", page: 1 }
+    assert_response :success
+    assert_select "table tr td", text: "Ada"
+  end
+
+  # Edge case tests (Task 8)
+
+  test "GET /admin/entries/:id for non-existent entry returns 404" do
+    login_as_admin
+    get admin_entry_path(id: 999_999)
+    assert_response :not_found
+  end
+
+  test "GET /admin/entries with invalid sort column falls back to default" do
+    login_as_admin
+    get admin_entries_path, params: { sort: "DROP TABLE entrants", dir: "asc" }
+    assert_response :success
+    # Falls back to default sort (company) — page renders without error
+    assert_select "table tbody tr", minimum: 1
+  end
+
+  test "GET /admin/entries search with special characters returns safely" do
+    login_as_admin
+    get admin_entries_path, params: { q: "O'Brien & \"Co\" <script>" }
+    assert_response :success
+    # No error, no unescaped HTML in response
+    refute_includes response.body, "<script>"
+  end
 end
