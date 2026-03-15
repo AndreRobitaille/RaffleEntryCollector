@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_15_001834) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_15_171529) do
   create_table "entrants", force: :cascade do |t|
     t.string "company", null: false
     t.datetime "created_at", null: false
@@ -27,4 +27,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_001834) do
     t.index ["email"], name: "index_entrants_on_email"
     t.index ["first_name", "last_name", "company"], name: "index_entrants_on_first_name_and_last_name_and_company"
   end
+
+  create_table "raffle_draws", force: :cascade do |t|
+    t.text "admin_note"
+    t.datetime "created_at", null: false
+    t.string "draw_type", default: "winner", null: false
+    t.integer "eligible_count", null: false
+    t.datetime "updated_at", null: false
+    t.integer "winner_id", null: false
+    t.index ["winner_id"], name: "index_raffle_draws_on_winner_id"
+  end
+
+  add_foreign_key "raffle_draws", "entrants", column: "winner_id"
 end

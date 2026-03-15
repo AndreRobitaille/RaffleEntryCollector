@@ -1514,7 +1514,7 @@ git commit -m "feat: add CSV export with clean and raw modes"
 
 ---
 
-## Task 11: Raffle Draw Model and Admin UI
+## Task 11: Raffle Draw Model and Admin UI ✅ (completed 2026-03-15)
 
 **Files:**
 - Create: `db/migrate/TIMESTAMP_create_raffle_draws.rb`

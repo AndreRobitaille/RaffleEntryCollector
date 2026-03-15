@@ -29,6 +29,8 @@ class Entrant < ApplicationRecord
 
   validate :interest_areas_must_be_array
 
+  has_many :raffle_draws, foreign_key: :winner_id
+
   scope :eligible, -> { where(eligibility_status: %w[eligible reinstated_admin]) }
   scope :duplicates, -> { where(eligibility_status: "duplicate_review") }
   scope :excluded, -> { where(eligibility_status: "excluded_admin") }

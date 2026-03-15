@@ -20,6 +20,10 @@ Rails.application.routes.draw do
 
     get "export", to: "exports#index", as: :export
     get "export/download", to: "exports#download", as: :export_download
+
+    resource :raffle, only: [ :show ], controller: "raffle" do
+      post :draw
+    end
   end
 
   get "up" => "rails/health#show", as: :rails_health_check

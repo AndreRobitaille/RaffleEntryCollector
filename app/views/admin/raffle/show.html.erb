@@ -1,0 +1,48 @@
+<h1>Raffle Drawing</h1>
+
+<div class="admin-stats">
+  <div class="admin-stat">
+    <span class="admin-stat__label">Total Entries</span>
+    <span class="admin-stat__count"><%= @total_count %></span>
+  </div>
+  <div class="admin-stat">
+    <span class="admin-stat__label">Eligible for Draw</span>
+    <span class="admin-stat__count admin-stat__count--eligible"><%= @eligible_count %></span>
+  </div>
+  <div class="admin-stat">
+    <span class="admin-stat__label">Excluded</span>
+    <span class="admin-stat__count admin-stat__count--excluded"><%= @excluded_count %></span>
+  </div>
+</div>
+
+<div class="admin-draw-action">
+  <%= button_to "Draw Winner", draw_admin_raffle_path, method: :post,
+      class: "admin-btn admin-btn--primary",
+      data: { turbo_confirm: "Draw a winner from #{@eligible_count} eligible entries?" } %>
+</div>
+
+<% if @draws.any? %>
+  <h2>Draw History</h2>
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Winner</th>
+        <th>Eligible Pool</th>
+        <th>Note</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @draws.each do |d| %>
+        <tr>
+          <td><%= d.created_at.strftime("%b %d %H:%M") %></td>
+          <td><%= d.draw_type.titleize %></td>
+          <td><%= link_to "#{d.winner.first_name} #{d.winner.last_name}", admin_entry_path(d.winner) %></td>
+          <td><%= d.eligible_count %></td>
+          <td><%= d.admin_note %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+<% end %>
