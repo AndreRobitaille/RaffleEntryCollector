@@ -61,4 +61,22 @@ class Admin::RaffleControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "table tbody tr", count: 1
   end
+
+  test "draw last eligible entry then fail on next draw" do
+    # Exclude all but one eligible entry
+    Entrant.eligible.where.not(id: entrants(:ada).id).update_all(eligibility_status: "excluded_admin")
+
+    post draw_admin_raffle_path
+    assert_redirected_to admin_raffle_path
+    follow_redirect!
+    assert_equal 1, RaffleDraw.count
+    assert_equal "winner", entrants(:ada).reload.eligibility_status
+
+    # Now no eligible entries remain
+    post draw_admin_raffle_path
+    assert_redirected_to admin_raffle_path
+    follow_redirect!
+    assert_select ".admin-flash--alert", /no eligible/i
+    assert_equal 1, RaffleDraw.count
+  end
 end
