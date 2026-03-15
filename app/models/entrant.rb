@@ -32,6 +32,8 @@ class Entrant < ApplicationRecord
 
   validate :interest_areas_must_be_array
 
+  before_validation :normalize_text_fields
+
   has_many :raffle_draws, foreign_key: :winner_id
 
   scope :eligible, -> { where(eligibility_status: %w[eligible reinstated_admin]) }
@@ -39,6 +41,14 @@ class Entrant < ApplicationRecord
   scope :excluded, -> { where(eligibility_status: "excluded_admin") }
 
   private
+
+  def normalize_text_fields
+    self.first_name = first_name&.squish
+    self.last_name = last_name&.squish
+    self.company = company&.squish
+    self.job_title = job_title&.squish
+    self.email = email&.squish&.downcase
+  end
 
   def interest_areas_must_be_array
     errors.add(:interest_areas, "must be an array") unless interest_areas.is_a?(Array)

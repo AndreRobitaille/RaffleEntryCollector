@@ -105,17 +105,15 @@ class DuplicateDetectorTest < ActiveSupport::TestCase
     assert_equal "eligible", original.eligibility_status
   end
 
-  test "whitespace-padded email does not match trimmed counterpart (see Issue #23)" do
-    Entrant.create!(first_name: "Ada", last_name: "Lovelace", email: "ada@example.com",
-                    company: "Babbage", job_title: "Eng", eligibility_confirmed: true)
-    padded = Entrant.new(first_name: "X", last_name: "Y", email: " ada@example.com ",
-                         company: "Other", job_title: "Dev", eligibility_status: "eligible")
-    padded.save!(validate: false)
+  test "whitespace-padded email matches after normalization (Issue #23)" do
+    original = Entrant.create!(first_name: "Ada", last_name: "Lovelace", email: "ada@example.com",
+                               company: "Babbage", job_title: "Eng", eligibility_confirmed: true)
+    padded = Entrant.create!(first_name: "X", last_name: "Y", email: " ada@example.com ",
+                             company: "Other", job_title: "Dev", eligibility_confirmed: true)
 
     DuplicateDetector.check(padded)
+    original.reload
 
-    # This SHOULD flag a duplicate but doesn't because email isn't stripped.
-    # When Issue #23 is resolved, change this assertion to assert_equal "duplicate_review"
-    assert_equal "eligible", Entrant.find_by(email: "ada@example.com").eligibility_status
+    assert_equal "duplicate_review", original.eligibility_status
   end
 end

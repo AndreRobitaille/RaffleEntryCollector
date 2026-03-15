@@ -209,7 +209,67 @@ class EntrantTest < ActiveSupport::TestCase
     assert_includes entrant.errors[:job_title], "may only contain standard characters (letters, numbers, and common symbols)"
   end
 
-  test "rejects newline in first_name" do
+  # Whitespace normalization (Issue #23)
+
+  test "strips leading and trailing whitespace from all text fields" do
+    entrant = Entrant.new(
+      first_name: "  Ada  ",
+      last_name: "  Lovelace  ",
+      email: "  ada@example.com  ",
+      company: "  Babbage Inc  ",
+      job_title: "  Engineer  ",
+      eligibility_confirmed: true
+    )
+    entrant.valid?
+    assert_equal "Ada", entrant.first_name
+    assert_equal "Lovelace", entrant.last_name
+    assert_equal "ada@example.com", entrant.email
+    assert_equal "Babbage Inc", entrant.company
+    assert_equal "Engineer", entrant.job_title
+  end
+
+  test "collapses internal whitespace in text fields" do
+    entrant = Entrant.new(
+      first_name: "Mary  Jane",
+      last_name: "Van  Der  Berg",
+      email: "mary@example.com",
+      company: "Big   Corp",
+      job_title: "Senior   Engineer",
+      eligibility_confirmed: true
+    )
+    entrant.valid?
+    assert_equal "Mary Jane", entrant.first_name
+    assert_equal "Van Der Berg", entrant.last_name
+    assert_equal "Big Corp", entrant.company
+    assert_equal "Senior Engineer", entrant.job_title
+  end
+
+  test "downcases email" do
+    entrant = Entrant.new(
+      first_name: "Ada", last_name: "Lovelace",
+      email: "Ada@Example.COM",
+      company: "X", job_title: "X", eligibility_confirmed: true
+    )
+    entrant.valid?
+    assert_equal "ada@example.com", entrant.email
+  end
+
+  test "normalization handles nil fields without error" do
+    entrant = Entrant.new(first_name: nil, last_name: nil, email: nil, company: nil, job_title: nil)
+    assert_nothing_raised { entrant.valid? }
+  end
+
+  test "whitespace-only input becomes blank and fails presence validation" do
+    entrant = Entrant.new(
+      first_name: "   ",
+      last_name: "X", email: "x@x.com", company: "X", job_title: "X",
+      eligibility_confirmed: true
+    )
+    assert_not entrant.valid?
+    assert_includes entrant.errors[:first_name], "can't be blank"
+  end
+
+  test "normalizes newline in first_name to space" do
     entrant = Entrant.new(
       first_name: "Ada\nLovelace",
       last_name: "X",
@@ -218,7 +278,7 @@ class EntrantTest < ActiveSupport::TestCase
       job_title: "X",
       eligibility_confirmed: true
     )
-    assert_not entrant.valid?
-    assert_includes entrant.errors[:first_name], "may only contain standard characters (letters, numbers, and common symbols)"
+    entrant.valid?
+    assert_equal "Ada Lovelace", entrant.first_name
   end
 end
