@@ -1,0 +1,22 @@
+ada:
+  first_name: Ada
+  last_name: Lovelace
+  email: ada@example.com
+  company: Babbage Inc
+  job_title: Engineer
+  eligibility_confirmed: true
+  eligibility_status: eligible
+  interest_areas:
+    - "Penetration Testing"
+    - "Application Security"
+
+grace:
+  first_name: Grace
+  last_name: Hopper
+  email: grace@example.com
+  company: US Navy
+  job_title: Admiral
+  eligibility_confirmed: true
+  eligibility_status: eligible
+  interest_areas:
+    - "Security Training"

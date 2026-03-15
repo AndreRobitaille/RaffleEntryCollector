@@ -10,5 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 0) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_15_001834) do
+  create_table "entrants", force: :cascade do |t|
+    t.string "company", null: false
+    t.datetime "created_at", null: false
+    t.boolean "eligibility_confirmed", default: false, null: false
+    t.string "eligibility_status", default: "eligible", null: false
+    t.string "email", null: false
+    t.string "exclusion_reason"
+    t.string "first_name", null: false
+    t.json "interest_areas", default: []
+    t.string "job_title", null: false
+    t.string "last_name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["eligibility_status"], name: "index_entrants_on_eligibility_status"
+    t.index ["email"], name: "index_entrants_on_email"
+    t.index ["first_name", "last_name", "company"], name: "index_entrants_on_first_name_and_last_name_and_company"
+  end
 end
