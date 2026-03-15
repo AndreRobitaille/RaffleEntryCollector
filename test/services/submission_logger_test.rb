@@ -40,4 +40,33 @@ class SubmissionLoggerTest < ActiveSupport::TestCase
     lines = @log_path.readlines
     assert_equal 2, lines.size
   end
+
+  test "logged JSON contains all expected fields" do
+    entrant = Entrant.create!(
+      first_name: "Ada", last_name: "Lovelace", email: "ada@example.com",
+      company: "Babbage", job_title: "Eng", eligibility_confirmed: true,
+      interest_areas: [ "Application Security" ]
+    )
+
+    SubmissionLogger.log(entrant, log_path: @log_path)
+
+    data = JSON.parse(@log_path.readlines.first)
+    expected_keys = %w[id first_name last_name email company job_title interest_areas eligibility_confirmed created_at logged_at]
+    assert_equal expected_keys.sort, data.keys.sort
+  end
+
+  test "handles standard US characters in fields" do
+    entrant = Entrant.create!(
+      first_name: "O'Brien", last_name: "Smith-Jones", email: "ob@example.com",
+      company: "AT&T Corp.", job_title: "Sr. Engineer", eligibility_confirmed: true
+    )
+
+    SubmissionLogger.log(entrant, log_path: @log_path)
+
+    data = JSON.parse(@log_path.readlines.first)
+    assert_equal "O'Brien", data["first_name"]
+    assert_equal "Smith-Jones", data["last_name"]
+    assert_equal "AT&T Corp.", data["company"]
+    assert_equal "Sr. Engineer", data["job_title"]
+  end
 end
