@@ -71,6 +71,23 @@ Three layers: SQLite database, append-only submission log, periodic USB backup (
 - **GitHub Issues** track all implementation tasks ([issues](https://github.com/AndreRobitaille/RaffleEntryCollector/issues)). When starting, completing, or making progress on a task, update the corresponding GitHub issue (e.g., `gh issue close 3`, or add a comment with `gh issue comment`). Reference issues in commit messages (e.g., `Closes #3`).
 - Implementation plan lives in `docs/plans/2026-03-14-implementation-plan.md` — issue numbers map to task numbers.
 
+## Session Workflow (MUST follow)
+
+### Starting a task
+- **Always brainstorm first** before writing code for any new feature or non-trivial change. Use the brainstorming skill to explore requirements and design before implementation.
+
+### Before every commit
+1. **Run quality checks** — all three must pass before committing:
+   - `bin/rails test` (full test suite)
+   - `bundle exec rubocop` (linting — exclude `.html.erb` files)
+   - `bundle exec brakeman --no-pager -q` (security scan)
+2. **If working on a GitHub issue**, post a markdown comment to the issue (`gh issue comment <number>`) summarizing what was done in this commit.
+3. **Reference the GitHub issue** in the commit message (e.g., `Closes #N` or `Issue #N`).
+4. **Update local tracking** — if a task or todo item was completed, mark it as done in `docs/plans/2026-03-14-implementation-plan.md` and any other relevant local docs.
+
+### Before ending a session
+- Confirm all quality checks pass (tests, rubocop, brakeman) even if no commit is being made — catch regressions early.
+
 ## Design Constraints
 
 - All UI must be touch-friendly with large tap targets (10.1" touchscreen, 1360x768)

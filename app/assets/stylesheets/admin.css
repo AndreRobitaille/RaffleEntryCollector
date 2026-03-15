@@ -44,7 +44,7 @@ html { height: 100%; }
 }
 
 .admin-header {
-  background: linear-gradient(90deg, var(--accent), var(--blue));
+  background: var(--accent);
   padding: 0 24px;
   height: 48px;
   display: flex;
@@ -123,6 +123,7 @@ html { height: 100%; }
   background: var(--brand-deep);
   padding: 12px 20px;
   border-radius: var(--radius);
+  border-top: 2px solid var(--accent);
   flex: 1;
   text-align: center;
 }
@@ -208,6 +209,10 @@ html { height: 100%; }
   transition: background var(--transition);
 }
 
+.admin-table__row:nth-child(even) {
+  background: rgba(59, 56, 111, 0.2);
+}
+
 .admin-table__row:hover {
   background: rgba(59, 56, 111, 0.3);
 }
@@ -232,10 +237,10 @@ html { height: 100%; }
 .admin-table__view-btn {
   color: var(--blue);
   text-decoration: none;
-  font-size: 12px;
+  font-size: 13px;
   border: 1px solid rgba(91, 139, 205, 0.3);
-  padding: 3px 10px;
-  border-radius: 3px;
+  padding: 5px 12px;
+  border-radius: 4px;
   transition: border-color var(--transition), color var(--transition);
 }
 
@@ -442,7 +447,7 @@ html { height: 100%; }
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 16px;
+  padding: 10px 20px;
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
@@ -531,7 +536,7 @@ html { height: 100%; }
   color: var(--blue);
   text-decoration: none;
   font-size: 13px;
-  padding: 6px 12px;
+  padding: 8px 16px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   transition: border-color var(--transition), color var(--transition);
