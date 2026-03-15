@@ -61,14 +61,4 @@ class Admin::RaffleControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "table tbody tr", count: 1
   end
-
-  private
-
-  def login_as_admin
-    post admin_login_path, params: { password: admin_password }
-  end
-
-  def admin_password
-    Rails.application.credentials.admin_password || ENV.fetch("ADMIN_PASSWORD", "changeme")
-  end
 end

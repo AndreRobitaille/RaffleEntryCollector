@@ -125,14 +125,4 @@ class Admin::ExportsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "1", diana_row["space_systems_security"]
     assert_equal "0", diana_row["penetration_testing"]
   end
-
-  private
-
-  def login_as_admin
-    post admin_login_path, params: { password: admin_password }
-  end
-
-  def admin_password
-    Rails.application.credentials.admin_password || ENV.fetch("ADMIN_PASSWORD", "changeme")
-  end
 end

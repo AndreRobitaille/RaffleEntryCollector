@@ -169,7 +169,7 @@ class Admin::EntriesControllerTest < ActionDispatch::IntegrationTest
     patch reinstate_admin_entry_path(entrant)
     assert_redirected_to admin_entry_path(entrant)
     follow_redirect!
-    assert_select ".admin-flash--alert", text: /Cannot modify/
+    assert_select ".admin-flash--alert", text: /Cannot reinstate/
     entrant.reload
     assert_equal "winner", entrant.eligibility_status
   end
@@ -191,13 +191,21 @@ class Admin::EntriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "reinstated_admin", entrant.eligibility_status
   end
 
-  private
-
-  def login_as_admin
-    post admin_login_path, params: { password: admin_password }
+  test "PATCH reinstate does not modify self_attested_ineligible entry" do
+    login_as_admin
+    entrant = entrants(:ineligible_bob)
+    patch reinstate_admin_entry_path(entrant)
+    assert_redirected_to admin_entry_path(entrant)
+    follow_redirect!
+    assert_select ".admin-flash--alert", text: /Cannot reinstate/
+    entrant.reload
+    assert_equal "self_attested_ineligible", entrant.eligibility_status
   end
 
-  def admin_password
-    Rails.application.credentials.admin_password || ENV.fetch("ADMIN_PASSWORD", "changeme")
+  test "GET /admin/entries shows backup status card" do
+    login_as_admin
+    get admin_entries_path
+    assert_response :success
+    assert_select ".admin-stat__label", text: "USB Backup"
   end
 end

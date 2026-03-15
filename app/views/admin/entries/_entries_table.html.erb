@@ -7,7 +7,7 @@
   end
   active_class = @sort_column == column.to_s ? "admin-table__th--active" : ""
   link_to "#{label}#{indicator}",
-    admin_entries_path(sort: column, dir: next_dir, q: @query),
+    admin_entries_path(sort: column, dir: next_dir, q: @query, page: @page),
     class: "admin-table__sort #{active_class}"
 end %>
 
@@ -43,3 +43,15 @@ end %>
     <% end %>
   </tbody>
 </table>
+
+<% if @total_pages > 1 %>
+  <div class="admin-pagination">
+    <% if @page > 1 %>
+      <%= link_to "← Prev", admin_entries_path(sort: @sort_column, dir: @sort_direction, q: @query, page: @page - 1), class: "admin-pagination__link" %>
+    <% end %>
+    <span class="admin-pagination__info">Page <%= @page %> of <%= @total_pages %></span>
+    <% if @page < @total_pages %>
+      <%= link_to "Next →", admin_entries_path(sort: @sort_column, dir: @sort_direction, q: @query, page: @page + 1), class: "admin-pagination__link" %>
+    <% end %>
+  </div>
+<% end %>

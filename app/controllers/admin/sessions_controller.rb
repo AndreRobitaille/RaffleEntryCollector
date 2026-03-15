@@ -3,7 +3,7 @@ class Admin::SessionsController < ApplicationController
   end
 
   def create
-    if params[:password] == admin_password
+    if ActiveSupport::SecurityUtils.secure_compare(params[:password].to_s, admin_password)
       session[:admin_authenticated] = true
       redirect_to admin_root_path
     else

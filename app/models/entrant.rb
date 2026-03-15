@@ -24,7 +24,7 @@ class Entrant < ApplicationRecord
   validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :company, presence: true
   validates :job_title, presence: true
-  validates :eligibility_confirmed, acceptance: { accept: true }
+  validates :eligibility_confirmed, acceptance: { accept: true }, on: :create
   validates :eligibility_status, inclusion: { in: ELIGIBILITY_STATUSES }
 
   validate :interest_areas_must_be_array

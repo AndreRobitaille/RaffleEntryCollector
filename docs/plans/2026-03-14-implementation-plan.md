@@ -1947,7 +1947,7 @@ git commit -m "feat: add USB backup service with status tracking"
 
 ---
 
-## Task 13: Admin Dashboard (Backup Status + Navigation)
+## Task 13: Admin Dashboard (Backup Status + Navigation) ✅ (completed 2026-03-15)
 
 **Files:**
 - Modify: `app/views/admin/entries/index.html.erb`

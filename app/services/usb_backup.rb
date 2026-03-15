@@ -1,3 +1,5 @@
+require "open3"
+
 class UsbBackup
   DEFAULT_STATUS_FILE = Rails.root.join("tmp", "backup_status.json")
   USB_LABEL = "RAFFLE_BACKUP"
@@ -10,7 +12,9 @@ class UsbBackup
     db_path = ActiveRecord::Base.connection_db_config.database
     backup_db_path = File.join(target_dir, "raffle.sqlite3")
 
-    system("sqlite3", db_path, ".backup #{backup_db_path}")
+    unless system("sqlite3", db_path, ".backup '#{backup_db_path}'")
+      return failure("sqlite3 backup command failed")
+    end
 
     log_path = Rails.root.join("log", "submissions.jsonl")
     if log_path.exist?
@@ -31,8 +35,9 @@ class UsbBackup
   end
 
   def self.find_usb_mount
-    mount_point = `findmnt -rn -S LABEL=#{USB_LABEL} -o TARGET 2>/dev/null`.strip
-    mount_point.empty? ? nil : mount_point
+    stdout, status = Open3.capture2("findmnt", "-rn", "-S", "LABEL=#{USB_LABEL}", "-o", "TARGET")
+    mount_point = stdout.strip
+    status.success? && !mount_point.empty? ? mount_point : nil
   end
 
   def self.failure(message)

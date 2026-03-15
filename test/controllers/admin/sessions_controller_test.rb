@@ -33,10 +33,4 @@ class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
     get admin_root_path
     assert_redirected_to admin_login_path
   end
-
-  private
-
-  def admin_password
-    Rails.application.credentials.admin_password || ENV.fetch("ADMIN_PASSWORD", "changeme")
-  end
 end

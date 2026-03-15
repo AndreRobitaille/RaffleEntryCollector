@@ -15,6 +15,18 @@
     <span class="admin-stat__label">Duplicates</span>
     <span class="admin-stat__count admin-stat__count--duplicate"><%= @duplicate_count %></span>
   </div>
+  <div class="admin-stat">
+    <span class="admin-stat__label">USB Backup</span>
+    <% if @backup_status[:success] %>
+      <span class="admin-stat__status admin-stat__status--ok">OK</span>
+      <span class="admin-stat__detail"><%= time_ago_in_words(Time.parse(@backup_status[:last_backup_at])) %> ago</span>
+    <% elsif @backup_status[:error] %>
+      <span class="admin-stat__status admin-stat__status--error">Failed</span>
+      <span class="admin-stat__detail"><%= @backup_status[:error] %></span>
+    <% else %>
+      <span class="admin-stat__status admin-stat__status--none">No backup yet</span>
+    <% end %>
+  </div>
 </div>
 
 <%= form_with url: admin_entries_path, method: :get do |f| %>
