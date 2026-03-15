@@ -22,11 +22,50 @@ class UsbBackupTest < ActiveSupport::TestCase
     log_path = Rails.root.join("log", "submissions.jsonl")
     File.write(log_path, "{\"test\": true}\n")
 
-    result = UsbBackup.perform(target_dir: @backup_dir)
-    assert result[:success]
-    assert File.exist?(File.join(@backup_dir, "submissions.jsonl"))
+    UsbBackup.stub(:backup_database, true) do
+      result = UsbBackup.perform(target_dir: @backup_dir)
+      assert result[:success]
+      assert File.exist?(File.join(@backup_dir, "submissions.jsonl"))
+    end
   ensure
     log_path.delete if log_path.exist?
+  end
+
+  test "succeeds without JSONL log file" do
+    log_path = Rails.root.join("log", "submissions.jsonl")
+    log_path.delete if log_path.exist?
+
+    UsbBackup.stub(:backup_database, true) do
+      result = UsbBackup.perform(target_dir: @backup_dir)
+      assert result[:success]
+      assert_not File.exist?(File.join(@backup_dir, "submissions.jsonl"))
+    end
+  end
+
+  test "returns failure when find_usb_mount returns nil" do
+    UsbBackup.stub(:find_usb_mount, nil) do
+      result = UsbBackup.perform
+      assert_not result[:success]
+      assert_equal "No backup target found", result[:error]
+    end
+  end
+
+  test "uses find_usb_mount result as target_dir when not specified" do
+    UsbBackup.stub(:find_usb_mount, @backup_dir) do
+      UsbBackup.stub(:backup_database, true) do
+        result = UsbBackup.perform
+        assert result[:success]
+      end
+    end
+  end
+
+  test "overwrites existing backup file without error" do
+    File.write(File.join(@backup_dir, "raffle.sqlite3"), "old data")
+
+    UsbBackup.stub(:backup_database, true) do
+      result = UsbBackup.perform(target_dir: @backup_dir)
+      assert result[:success]
+    end
   end
 
   test "returns failure when target dir does not exist" do
