@@ -62,3 +62,15 @@ ineligible_bob:
   eligibility_confirmed: true
   eligibility_status: self_attested_ineligible
   interest_areas: []
+
+reinstated_diana:
+  first_name: Diana
+  last_name: Prince
+  email: diana@example.com
+  company: Themyscira Corp
+  job_title: Security Analyst
+  eligibility_confirmed: true
+  eligibility_status: reinstated_admin
+  interest_areas:
+    - "Cloud & Infrastructure Security"
+    - "Space Systems Security"
