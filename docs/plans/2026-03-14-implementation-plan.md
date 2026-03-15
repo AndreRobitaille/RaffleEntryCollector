@@ -435,7 +435,7 @@ git commit -m "feat: add DuplicateDetector service for post-submission flagging"
 
 ---
 
-## Task 4: Submission Logger (JSONL Append Log)
+## Task 4: Submission Logger (JSONL Append Log) ✅ (completed 2026-03-14)
 
 **Files:**
 - Create: `app/services/submission_logger.rb`
