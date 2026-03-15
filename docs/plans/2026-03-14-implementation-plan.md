@@ -116,7 +116,7 @@ git commit -m "feat: scaffold Rails 8 app with SQLite WAL mode and Hotwire"
 
 ---
 
-## Task 2: Entrant Model and Migration
+## Task 2: Entrant Model and Migration ✅ (completed 2026-03-14)
 
 **Files:**
 - Create: `db/migrate/TIMESTAMP_create_entrants.rb`
