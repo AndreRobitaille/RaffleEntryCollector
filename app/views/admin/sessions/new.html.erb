@@ -1,0 +1,13 @@
+<h1>Admin Login</h1>
+
+<% if flash[:alert] %>
+  <p class="alert"><%= flash[:alert] %></p>
+<% end %>
+
+<%= form_with(url: admin_login_path, method: :post) do |f| %>
+  <div>
+    <%= f.label :password %>
+    <%= f.password_field :password, autofocus: true %>
+  </div>
+  <%= f.submit "Log In" %>
+<% end %>
