@@ -193,7 +193,9 @@ step "Installing gems..."
 sudo -u raffle /bin/bash -c "
     export PATH='$RAFFLE_PATH'
     cd '$APP_DEST'
-    bundle install --deployment --without development test
+    bundle config set --local deployment true
+    bundle config set --local without 'development test'
+    bundle install
 "
 
 # --- Step 9: Generate .env file -------------------------------------
