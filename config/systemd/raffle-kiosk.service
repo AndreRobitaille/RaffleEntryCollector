@@ -21,12 +21,10 @@ StandardError=journal
 # Memory safety net — restart if leak develops (Pi 4 has 4GB)
 MemoryMax=512M
 
-# Security hardening
+# Security: runs as unprivileged 'raffle' user with nologin shell.
+# The Pi is a single-purpose kiosk — filesystem sandboxing (ProtectSystem,
+# ProtectHome) caused SQLite open failures and isn't worth the complexity.
 NoNewPrivileges=true
-ProtectSystem=strict
-ProtectHome=true
-PrivateTmp=true
-ReadWritePaths=/opt/raffle
 
 [Install]
 WantedBy=multi-user.target
