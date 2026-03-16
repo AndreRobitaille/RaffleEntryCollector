@@ -1,21 +1,43 @@
 <h2 class="admin-export__title">Export Entries</h2>
 
-<div class="admin-stats" style="max-width: 320px;">
+<div class="admin-stats">
   <div class="admin-stat">
     <span class="admin-stat__label">Total</span>
     <span class="admin-stat__count"><%= @total_count %></span>
   </div>
-  <div class="admin-stat">
+  <div class="admin-stat <%= @eligible_count < RaffleDraw::MINIMUM_ELIGIBLE ? 'admin-stat--warn' : '' %>">
     <span class="admin-stat__label">Eligible</span>
-    <span class="admin-stat__count admin-stat__count--eligible"><%= @eligible_count %></span>
+    <span class="admin-stat__count <%= @eligible_count < RaffleDraw::MINIMUM_ELIGIBLE ? 'admin-stat__count--warn' : 'admin-stat__count--eligible' %>"><%= @eligible_count %></span>
+    <% if @eligible_count < RaffleDraw::MINIMUM_ELIGIBLE %>
+      <span class="admin-stat__hint admin-stat__hint--warn">need <%= RaffleDraw::MINIMUM_ELIGIBLE %>+ for raffle</span>
+    <% else %>
+      <span class="admin-stat__hint admin-stat__hint--ok">min <%= RaffleDraw::MINIMUM_ELIGIBLE %> for raffle</span>
+    <% end %>
+  </div>
+  <div class="admin-stat">
+    <span class="admin-stat__label">Excluded</span>
+    <span class="admin-stat__count admin-stat__count--excluded"><%= @excluded_count %></span>
+  </div>
+  <div class="admin-stat">
+    <span class="admin-stat__label">Winners</span>
+    <span class="admin-stat__count" style="color: var(--blue);"><%= @winners_count %></span>
+    <% if @winners_count == 0 %>
+      <span class="admin-stat__hint admin-stat__hint--info">not yet drawn</span>
+    <% end %>
   </div>
 </div>
 
-<div class="admin-export__options">
+<% if @eligible_count >= RaffleDraw::MINIMUM_ELIGIBLE %>
+  <p class="admin-stats-summary admin-stats-summary--ok"><%= @eligible_count %> eligible — ready for raffle</p>
+<% else %>
+  <p class="admin-stats-summary admin-stats-summary--warn">Only <%= @eligible_count %> eligible — need at least <%= RaffleDraw::MINIMUM_ELIGIBLE %> for raffle</p>
+<% end %>
+
+<div class="admin-export__options admin-export__options--three">
   <div class="admin-export__option">
     <h3 class="admin-export__option-title">Eligible Entries</h3>
     <p class="admin-export__option-description">
-      Download entries eligible for the raffle only. Excludes entries marked as
+      Entries eligible for the raffle only. Excludes entries marked as
       ineligible, excluded, or flagged for duplicate review.
     </p>
     <p class="admin-export__option-count"><%= @eligible_count %> entries</p>
@@ -25,9 +47,23 @@
   <div class="admin-export__option">
     <h3 class="admin-export__option-title">All Entries</h3>
     <p class="admin-export__option-description">
-      Download all entries including excluded, duplicates, and ineligible.
+      Every entry including excluded, duplicates, and self-attested ineligible.
     </p>
     <p class="admin-export__option-count"><%= @total_count %> entries</p>
     <%= link_to "Download CSV", admin_export_download_path(type: "all"), class: "admin-btn admin-btn--primary" %>
+  </div>
+
+  <div class="admin-export__option">
+    <h3 class="admin-export__option-title">Winners</h3>
+    <p class="admin-export__option-description">
+      Winner and alternate winners with contact info and draw order.
+    </p>
+    <% if @winners_count > 0 %>
+      <p class="admin-export__option-count"><%= @winners_count %> winners</p>
+      <%= link_to "Download CSV", admin_export_download_path(type: "winners"), class: "admin-btn admin-btn--primary" %>
+    <% else %>
+      <p class="admin-export__option-count">No winners drawn yet</p>
+      <span class="admin-btn admin-btn--primary admin-btn--disabled">Download CSV</span>
+    <% end %>
   </div>
 </div>

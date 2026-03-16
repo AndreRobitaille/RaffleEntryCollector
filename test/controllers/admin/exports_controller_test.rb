@@ -144,6 +144,25 @@ class Admin::ExportsControllerTest < ActionDispatch::IntegrationTest
     assert_includes csv.headers, "draw_type"
   end
 
+  test "index shows contextual stat hints" do
+    login_as_admin
+    get admin_export_path
+    assert_select ".admin-stat__hint"
+  end
+
+  test "index shows warning when fewer than 3 eligible" do
+    login_as_admin
+    Entrant.where(eligibility_status: "eligible").update_all(eligibility_status: "excluded_admin")
+    get admin_export_path
+    assert_select ".admin-stats-summary--warn"
+  end
+
+  test "index shows three export cards" do
+    login_as_admin
+    get admin_export_path
+    assert_select ".admin-export__option", 3
+  end
+
   test "INTEREST_AREA_COLUMNS covers all Entrant::INTEREST_AREA_OPTIONS" do
     assert_equal Entrant::INTEREST_AREA_OPTIONS, Admin::ExportsController::INTEREST_AREA_COLUMNS.keys
   end
