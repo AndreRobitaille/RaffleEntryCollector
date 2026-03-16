@@ -28,4 +28,31 @@ class RaffleDraw < ApplicationRecord
       )
     end
   end
+
+  # Draws winner + 2 alternates in a single transaction.
+  # Alternates are ordered by record id (first created = Alternate #1).
+  def self.perform_full_draw!
+    transaction do
+      eligible = Entrant.eligible.where.not(eligibility_status: %w[winner alternate_winner])
+      raise InsufficientEntrants, "Need at least #{MINIMUM_ELIGIBLE} eligible entrants" if eligible.count < MINIMUM_ELIGIBLE
+
+      draws = []
+      draws << draw_one!(status: "winner")
+      2.times { draws << draw_one!(status: "alternate_winner") }
+      draws
+    end
+  end
+
+  private_class_method def self.draw_one!(status:)
+    eligible = Entrant.eligible.where.not(eligibility_status: %w[winner alternate_winner])
+    pool_size = eligible.count
+    selected = eligible.offset(SecureRandom.random_number(pool_size)).first
+
+    selected.update!(eligibility_status: status)
+    create!(
+      winner: selected,
+      eligible_count: pool_size,
+      draw_type: status
+    )
+  end
 end

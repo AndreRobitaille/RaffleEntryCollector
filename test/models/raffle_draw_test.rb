@@ -89,6 +89,50 @@ class RaffleDrawTest < ActiveSupport::TestCase
     assert_equal 3, RaffleDraw::MINIMUM_ELIGIBLE
   end
 
+  test "perform_full_draw! creates winner and two alternates" do
+    draws = RaffleDraw.perform_full_draw!
+
+    assert_equal 3, draws.length
+    assert_equal "winner", draws[0].draw_type
+    assert_equal "alternate_winner", draws[1].draw_type
+    assert_equal "alternate_winner", draws[2].draw_type
+
+    winner_ids = draws.map(&:winner_id)
+    assert_equal winner_ids.uniq.length, 3
+
+    assert_equal "winner", draws[0].winner.reload.eligibility_status
+    assert_equal "alternate_winner", draws[1].winner.reload.eligibility_status
+    assert_equal "alternate_winner", draws[2].winner.reload.eligibility_status
+  end
+
+  test "perform_full_draw! records eligible_count correctly for each draw" do
+    draws = RaffleDraw.perform_full_draw!
+
+    assert_equal draws[0].eligible_count, draws[1].eligible_count + 1
+    assert_equal draws[1].eligible_count, draws[2].eligible_count + 1
+  end
+
+  test "perform_full_draw! raises InsufficientEntrants with exactly 2 eligible" do
+    Entrant.eligible.first.update!(eligibility_status: "excluded_admin")
+
+    assert_raises(RaffleDraw::InsufficientEntrants) do
+      RaffleDraw.perform_full_draw!
+    end
+
+    assert_equal 0, RaffleDraw.count
+  end
+
+  test "perform_full_draw! rolls back all changes on failure" do
+    Entrant.eligible.first.update!(eligibility_status: "excluded_admin")
+    eligible_before = Entrant.eligible.pluck(:eligibility_status)
+
+    assert_raises(RaffleDraw::InsufficientEntrants) do
+      RaffleDraw.perform_full_draw!
+    end
+
+    assert_equal eligible_before, Entrant.eligible.pluck(:eligibility_status)
+  end
+
   test "rejects nil eligible_count" do
     entrant = Entrant.create!(first_name: "A", last_name: "A", email: "a@x.com",
                               company: "X", job_title: "X", eligibility_confirmed: true)
