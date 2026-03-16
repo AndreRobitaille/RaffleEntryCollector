@@ -79,4 +79,14 @@ class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
       assert_response :unprocessable_entity
     end
   end
+
+  test "logout clears all session state including search params" do
+    login_as_admin
+    get admin_entries_path, params: { q: "Ada", sort: "last_name", dir: "desc" }
+    delete admin_logout_path
+    assert_nil session[:admin_authenticated]
+    assert_nil session[:admin_entries_search]
+    assert_nil session[:admin_entries_sort]
+    assert_nil session[:admin_entries_direction]
+  end
 end

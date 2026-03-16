@@ -24,7 +24,7 @@ class Admin::SessionsController < ApplicationController
   end
 
   def destroy
-    session.delete(:admin_authenticated)
+    reset_session
     redirect_to root_path
   end
 end
