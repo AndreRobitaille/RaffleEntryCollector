@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# udev helper script for mounting/unmounting RAFFLE_BACKUP USB drives
+# Called by 99-raffle-backup.rules — runs as root
+# Must be owned by root:root, mode 755
+
+set -euo pipefail
+
+ACTION="$1"
+DEVICE="$2"
+MOUNT_POINT="/mnt/raffle_backup"
+
+case "$ACTION" in
+    add)
+        mkdir -p "$MOUNT_POINT"
+        mount -t vfat -o "uid=raffle,gid=raffle,umask=022" "/dev/$DEVICE" "$MOUNT_POINT"
+        logger -t raffle-usb "Mounted /dev/$DEVICE at $MOUNT_POINT"
+        ;;
+    remove)
+        umount "$MOUNT_POINT" 2>/dev/null || true
+        rmdir "$MOUNT_POINT" 2>/dev/null || true
+        logger -t raffle-usb "Unmounted $MOUNT_POINT"
+        ;;
+    *)
+        logger -t raffle-usb "Unknown action: $ACTION"
+        exit 1
+        ;;
+esac
