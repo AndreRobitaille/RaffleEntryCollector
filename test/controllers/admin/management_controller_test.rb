@@ -50,4 +50,29 @@ class Admin::ManagementControllerTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_select ".admin-flash--notice"
   end
+
+  # --- Populate Demo ---
+
+  test "POST populate_demo without auth redirects to login" do
+    reset!
+    post populate_demo_admin_management_path
+    assert_redirected_to admin_login_path
+  end
+
+  test "populate_demo creates 300 entrants when DB is empty" do
+    RaffleDraw.delete_all
+    Entrant.delete_all
+
+    post populate_demo_admin_management_path
+    assert_redirected_to admin_management_path
+    assert_equal 300, Entrant.count
+  end
+
+  test "populate_demo fails when entrants exist" do
+    assert Entrant.exists? # fixtures loaded
+    post populate_demo_admin_management_path
+    assert_redirected_to admin_management_path
+    follow_redirect!
+    assert_select ".admin-flash--alert"
+  end
 end

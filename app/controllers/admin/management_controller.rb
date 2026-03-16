@@ -12,4 +12,11 @@ class Admin::ManagementController < Admin::BaseController
     end
     redirect_to admin_management_path, notice: "Drawing has been reset. All winners restored to eligible."
   end
+
+  def populate_demo
+    DemoPopulator.populate!
+    redirect_to admin_management_path, notice: "300 demo entrants created."
+  rescue DemoPopulator::DatabaseNotEmpty
+    redirect_to admin_management_path, alert: "Cannot populate: entrants already exist. Clear the database first."
+  end
 end
