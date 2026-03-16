@@ -185,9 +185,9 @@ sudo rsync -a --delete \
     --exclude='vendor/bundle/' \
     "$APP_SOURCE/" "$APP_DEST/"
 
-# Ensure writable directories exist
-sudo -u raffle mkdir -p "$APP_DEST/tmp" "$APP_DEST/log" "$APP_DEST/db"
+# Fix ownership after root rsync, then create writable directories
 sudo chown -R raffle:raffle "$APP_DEST"
+sudo -u raffle mkdir -p "$APP_DEST/tmp" "$APP_DEST/log" "$APP_DEST/db"
 
 step "Installing gems..."
 sudo -u raffle /bin/bash -c "
