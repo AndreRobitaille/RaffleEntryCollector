@@ -26,6 +26,7 @@ Three targeted improvements to admin pages: raffle page redesign, export page cl
 
 ### Full-Screen Celebration Overlay
 
+- **Purely client-side** — no server round-trip. JavaScript shows/hides a hidden `<div>` overlay on the raffle page.
 - Triggered by clicking "Announce" on any winner/alternate card
 - Covers entire viewport with gradient background (`#1a1835` → `#26235a` → `#3b386f`)
 - Accent gradient line across the top (`#5b8bcd` → `#a6da74` → `#5b8bcd`)
@@ -33,24 +34,31 @@ Three targeted improvements to admin pages: raffle page redesign, export page cl
   - "CONGRATULATIONS" label — green, uppercase, large letter-spacing
   - Name — white, very large font (~60px), bold
   - Company — sky blue, medium font (~24px)
-- Small "Close" button in bottom-right corner
+- Small "Close" button in bottom-right corner; also closeable via Escape key
 - Can be shown repeatedly — click Announce again anytime to re-show
 
 ### Backend Changes (Raffle Draw)
 
 - `RaffleDraw.perform_draw!` currently draws one entry at a time. Add a new `perform_full_draw!` method that draws winner + 2 alternates in a single transaction.
 - The draw button calls `perform_full_draw!` which:
-  1. Selects winner from eligible pool, marks as `winner`
-  2. Selects alternate #1 from remaining eligible, marks as `alternate_winner`
-  3. Selects alternate #2 from remaining eligible, marks as `alternate_winner`
-  4. Creates 3 `RaffleDraw` records with `draw_type` of `winner`, `alternate_winner`, `alternate_winner`
-  5. Rolls back entire transaction if fewer than 3 eligible entries
-- Alternates are ordered by `RaffleDraw.created_at` (first created = Alternate #1)
+  1. Checks eligible count >= 3; raises `RaffleDraw::InsufficientEntrants` if not
+  2. Selects winner from eligible pool (re-queries `Entrant.eligible` each time), marks as `winner`
+  3. Selects alternate #1 from *updated* eligible pool (winner now excluded), marks as `alternate_winner`
+  4. Selects alternate #2 from *updated* eligible pool (winner + alt #1 now excluded), marks as `alternate_winner`
+  5. Creates 3 `RaffleDraw` records with `draw_type` of `winner`, `alternate_winner`, `alternate_winner`
+  6. Rolls back entire transaction on any failure
+- `RaffleDraw::InsufficientEntrants` is a new exception class defined in `raffle_draw.rb` (alongside existing `NoEligibleEntrants`). The controller rescues both the same way.
+- **Alternate ordering**: alternates are distinguished by `RaffleDraw.id` (auto-incrementing). The first `alternate_winner` record created is Alternate #1, the second is Alternate #2. The CSV export and UI derive "#1" / "#2" labels by ordering `alternate_winner` records by `id`.
 - Keep existing `perform_draw!` for backwards compatibility with tests
+
+### "Draw complete" definition
+
+A draw is considered complete when at least one `RaffleDraw` record with `draw_type: "winner"` exists. The post-draw UI (winner cards, export button) is shown when `@draws.any?`. The draw is a **one-time operation** — once complete, the draw button is hidden and replaced by the winner cards. There is no "redraw" functionality.
 
 ### Winners CSV Export
 
-- New export type `"winners"` in `Admin::ExportsController#download`
+- New export type `"winners"` in `Admin::ExportsController#download` (single location — no separate action on the raffle controller)
+- Uses a separate `generate_winners_csv` method (the winners CSV has different columns than the entrant CSV, so `generate_csv` is not reused)
 - Columns: draw_type (Winner/Alternate #1/Alternate #2), first_name, last_name, email, company, job_title, drawn_at
 - Also writes to USB backup if available (same mechanism as existing exports)
 - Filename: `raffle-winners-{timestamp}.csv`
@@ -59,7 +67,7 @@ Three targeted improvements to admin pages: raffle page redesign, export page cl
 
 ### Stats Row — Full Breakdown with Context
 
-Replace the current 2-stat row (Total, Eligible) with 4 stats:
+Replace the current 2-stat row (Total, Eligible) with 4 stats. The `index` action in `Admin::ExportsController` needs to set `@excluded_count` and `@winners_count` in addition to the existing `@total_count` and `@eligible_count`.
 
 | Stat | Color | Context hint |
 |------|-------|-------------|
@@ -115,8 +123,8 @@ The same button group replaces the text field in both the `eligible`/`reinstated
 | `app/views/admin/entries/show.html.erb` | Replace text field with reason buttons in both exclude sections |
 | `app/assets/stylesheets/admin.css` | New classes: winner cards, celebration overlay, contextual stat hints, reason buttons |
 | `app/models/raffle_draw.rb` | Add `perform_full_draw!` method |
-| `app/controllers/admin/raffle_controller.rb` | Update `draw` action to call `perform_full_draw!`, add `announce` and `export_winners` actions |
-| `app/controllers/admin/exports_controller.rb` | Add `"winners"` export type |
-| `app/controllers/admin/entries_controller.rb` | Accept `exclusion_reason` from button params (no change needed — already reads from params) |
-| `config/routes.rb` | Add `announce` route for raffle, winners download route |
+| `app/controllers/admin/raffle_controller.rb` | Update `draw` action to call `perform_full_draw!`, rescue `InsufficientEntrants` |
+| `app/controllers/admin/exports_controller.rb` | Add `"winners"` export type to `download`; add `@excluded_count` and `@winners_count` to `index` |
+| `app/controllers/admin/entries_controller.rb` | No changes needed — already reads `exclusion_reason` from params |
+| `config/routes.rb` | No new routes needed (announce is client-side JS, winners export uses existing download path with `type=winners`) |
 | `test/` | Update raffle draw tests, add full-draw tests, update exclusion tests |
