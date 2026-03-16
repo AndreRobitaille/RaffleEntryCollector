@@ -29,8 +29,10 @@
   </div>
 </div>
 
-<%= form_with url: admin_entries_path, method: :get do |f| %>
+<%= form_with url: admin_entries_path, method: :get, class: "admin-search" do |f| %>
   <%= f.search_field :q, value: @query, placeholder: "Search by name, email, or company...", class: "admin-search__input" %>
+  <%= f.submit "Search", class: "admin-search__btn" %>
+  <%= link_to "Clear", admin_entries_path(q: ""), class: "admin-search__btn admin-search__btn--clear" %>
 <% end %>
 
 <%= render "entries_table" %>

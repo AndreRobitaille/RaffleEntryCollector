@@ -157,8 +157,16 @@ html, .admin-body {
 .admin-stat__count--excluded { color: var(--error); }
 .admin-stat__count--duplicate { color: var(--warning); }
 
+.admin-search {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
 .admin-search__input {
-  width: 100%;
+  flex: 1;
+  max-width: 400px;
   background: var(--brand-deep);
   border: 1px solid var(--brand);
   color: var(--white);
@@ -167,7 +175,6 @@ html, .admin-body {
   font-size: 15px;
   font-family: inherit;
   outline: none;
-  margin-bottom: 16px;
   transition: border-color var(--transition);
 }
 
@@ -177,6 +184,39 @@ html, .admin-body {
 
 .admin-search__input::placeholder {
   color: var(--text-muted);
+}
+
+.admin-search__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  border: 1px solid var(--brand);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+  white-space: nowrap;
+  background: var(--brand);
+  color: var(--ice);
+}
+
+.admin-search__btn:hover {
+  background: var(--brand-deep);
+  border-color: var(--sky);
+}
+
+.admin-search__btn--clear {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+
+.admin-search__btn--clear:hover {
+  border-color: var(--text-muted);
+  color: var(--text);
 }
 
 .admin-table {
@@ -792,6 +832,7 @@ html, .admin-body {
   width: calc(100vw - 40px);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
   overflow: visible;
+  margin: auto;
 }
 
 .admin-exclusion-modal::backdrop,
