@@ -1,0 +1,4 @@
+# Start Wayfire on tty1 (kiosk auto-login)
+if [ "$(tty)" = "/dev/tty1" ]; then
+    exec wayfire
+fi
