@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Called by cron every 5 minutes to back up to USB if present
+# Called by systemd timer (raffle-backup.timer) every 5 minutes to back up to USB if present
 set -euo pipefail
 
 cd "$(dirname "$0")/.."

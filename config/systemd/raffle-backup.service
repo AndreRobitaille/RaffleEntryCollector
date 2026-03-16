@@ -1,0 +1,16 @@
+[Unit]
+Description=Raffle Entry Collector USB Backup
+After=local-fs.target
+
+[Service]
+Type=oneshot
+User=raffle
+Group=raffle
+WorkingDirectory=/opt/raffle
+EnvironmentFile=/opt/raffle/.env
+Environment=PATH=/opt/raffle/.rbenv/shims:/opt/raffle/.rbenv/bin:/usr/bin:/bin
+
+ExecStart=/opt/raffle/bin/backup_to_usb
+
+StandardOutput=journal
+StandardError=journal
