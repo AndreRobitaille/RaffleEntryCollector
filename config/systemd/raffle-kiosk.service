@@ -25,7 +25,8 @@ MemoryMax=512M
 NoNewPrivileges=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/raffle/db /opt/raffle/log /opt/raffle/tmp
+PrivateTmp=true
+ReadWritePaths=/opt/raffle
 
 [Install]
 WantedBy=multi-user.target
