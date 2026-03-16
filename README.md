@@ -1,16 +1,35 @@
 # RaffleEntryCollector
 
-Kiosk-based raffle entry and lead collection app for the Final Frontier Security booth at CypherCon. Runs offline on a Raspberry Pi 4 with a 10.1" touchscreen.
+A kiosk-based raffle entry and lead collection app designed to run offline on a Raspberry Pi with a touchscreen. Originally built for the [Final Frontier Security](https://finalfrontiersecurity.com) booth at [CypherCon](https://cyphercon.com), but designed to be easily adapted for any booth, event, or conference.
 
 ## Features
 
-- **Kiosk entry form** — attendees enter name, email, company, job title, and select interest areas. 90-second idle timeout resets to the attract screen.
-- **Duplicate detection** — flags matching emails or name+company pairs for admin review (never blocks the kiosk).
-- **Admin console** (`/admin`) — password-protected dashboard for managing entries, excluding/reinstating entrants, and searching/sorting.
-- **Raffle drawing** — cryptographically secure random selection draws winner + 2 alternates in one action, with full audit trail. Full-screen celebration overlay for announcing winners at the booth.
-- **CSV export** — download eligible entries, all entries, or winners/alternates with contact info and draw order.
-- **USB backup** — automatic database and submission log backup to a labeled USB drive.
-- **Three-layer data integrity** — SQLite (WAL mode), append-only JSONL submission log, and periodic USB backup.
+- **Touchscreen kiosk UI** — attract screen, entry form, and success screen with 90-second idle timeout
+- **Duplicate detection** — flags matching emails or name+company pairs for admin review (never blocks the kiosk)
+- **Admin console** (`/admin`) — password-protected dashboard for managing entries, excluding/reinstating entrants, and searching/sorting
+- **Raffle drawing** — cryptographically secure random selection (winner + alternates), with full audit trail and celebration overlay
+- **CSV export** — download eligible entries, all entries, or winners/alternates
+- **Three-layer data integrity** — SQLite (WAL mode) + append-only JSONL submission log + automatic USB backup
+- **Offline-first** — no internet required during the event
+
+## Use It for Your Own Event
+
+This app is designed to be forked and customized. To make it yours:
+
+1. **Branding** — replace logo files in `app/assets/images/` and update colors in the stylesheet
+2. **Interest areas** — edit the checkbox options in the entry form view to match your services
+3. **Raffle prize** — update the attract screen and rules modal text
+4. **Admin password** — set your own via Rails encrypted credentials (see setup below)
+5. **Kiosk user** — change the username in `bin/setup_kiosk` if you don't want `andre`/`kiosk`
+
+The entry form collects: first name, last name, work email, company, job title, and interest areas (customizable). All data stays local on the device.
+
+## Tech Stack
+
+- **Ruby 4.0** / **Rails 8** with **Hotwire** (Turbo + Stimulus)
+- **SQLite** in WAL mode
+- **No JavaScript build pipeline** — uses importmap-rails
+- Renders in **Chromium kiosk mode** on the Pi
 
 ## Development Setup
 
@@ -23,7 +42,7 @@ cd RaffleEntryCollector
 
 ### 2. Install Ruby 4.0
 
-On Trixie, the easiest route is [mise](https://mise.jdx.dev/) (or rbenv):
+Using [mise](https://mise.jdx.dev/) (or rbenv):
 
 ```bash
 # If mise isn't installed yet:
@@ -31,8 +50,6 @@ curl https://mise.jdx.dev/install.sh | sh
 mise install ruby@4.0.0
 mise use ruby@4.0.0
 ```
-
-Alternatively, if Trixie's system Ruby is recent enough, use that.
 
 ### 3. Install dependencies and set up the database
 
@@ -43,19 +60,19 @@ bin/rails db:create db:migrate
 
 ### 4. Set the admin password
 
-The admin console requires a password stored in Rails encrypted credentials. To set it:
+The admin console requires a password stored in Rails encrypted credentials:
 
 ```bash
 EDITOR="nano" bin/rails credentials:edit
 ```
 
-Add the following line:
+Add:
 
 ```yaml
 admin_password: your-secure-password-here
 ```
 
-Save and exit. This encrypts the password into `config/credentials.yml.enc` (committed to the repo) using `config/master.key` (not committed — keep it safe).
+Save and exit. This encrypts the password into `config/credentials.yml.enc` (committed) using `config/master.key` (not committed — keep it safe).
 
 In development, the admin console falls back to `dev-password` if credentials are not configured.
 
@@ -64,6 +81,8 @@ In development, the admin console falls back to `dev-password` if credentials ar
 ```bash
 bin/rails server
 ```
+
+Visit `http://localhost:3000` for the kiosk UI.
 
 ### 6. Run the tests
 
@@ -77,10 +96,10 @@ bundle exec brakeman --no-pager -q
 
 The admin console lives at `/admin`. From the kiosk screens, there are two hidden ways to reach it:
 
-- **Tap target** — tap the small dot in the bottom-right corner of any kiosk screen 5 times in quick succession (within 1.5 seconds).
-- **Keyboard shortcut** — press `Ctrl+Shift+A` on any kiosk screen.
+- **Tap target** — tap the small dot in the bottom-right corner of any kiosk screen 5 times within 1.5 seconds
+- **Keyboard shortcut** — press `Ctrl+Shift+A` on any kiosk screen
 
-Both methods navigate to the admin login page. In development, the password is `dev-password`. In production, it uses the password set in Rails encrypted credentials (see step 4 above).
+In development, the password is `dev-password`.
 
 ## Kiosk Deployment (Raspberry Pi)
 
@@ -88,9 +107,10 @@ The kiosk runs on a Raspberry Pi 4 with Raspberry Pi OS 64-bit (Debian Trixie). 
 
 ### Prerequisites
 
-- Raspberry Pi 4 with Raspberry Pi OS 64-bit installed
-- An admin user with sudo access
-- Network access during setup (for installing packages and Ruby)
+- Raspberry Pi 4 (4 GB RAM recommended)
+- Raspberry Pi OS 64-bit (Debian Trixie)
+- A 10.1" (or similar) touchscreen
+- Network access during initial setup (for installing packages and Ruby)
 - A FAT32-formatted USB drive labeled `RAFFLE_BACKUP` (for backups)
 
 ### Running the Setup Script
@@ -101,7 +121,7 @@ From the cloned repo on the Pi:
 bin/setup_kiosk
 ```
 
-The script is idempotent — safe to re-run. It will:
+The script is idempotent — safe to re-run after changes. It will:
 
 1. Install system packages (build tools, SQLite, Chromium, Wayfire)
 2. Create a dedicated service user to run the Rails app
@@ -125,17 +145,14 @@ After the script completes, it will print next steps for setting the admin passw
 
 ### USB Backup
 
-Format a USB drive as FAT32 and label it `RAFFLE_BACKUP`. Plug it into the Pi at any time — it auto-mounts and backups begin automatically. Unplug it when you want to take the backup offsite. The backup includes:
-
-- The SQLite database
-- The append-only JSONL submission log
+Format a USB drive as FAT32 and label it `RAFFLE_BACKUP`. Plug it in at any time — it auto-mounts and backups begin automatically. The backup includes the SQLite database and the append-only JSONL submission log.
 
 Backup status is displayed on the admin dashboard.
 
 ### Emergency Access
 
-- Switch to a terminal TTY for admin login
 - SSH into the Pi from another machine
+- Switch to a terminal TTY (`Ctrl+Alt+F2`) and login as the admin user
 - VNC via SSH tunnel
 
 ### Configuration Files
@@ -156,10 +173,12 @@ All deployment config lives in the repo:
 
 ## Deployment Checklist
 
-- [ ] Set admin password (the setup script will tell you how)
+- [ ] Fork/clone the repo and customize branding, interest areas, and prize text
+- [ ] Set admin password via `bin/rails credentials:edit`
 - [ ] Back up `config/master.key` securely (it's not in the repo)
 - [ ] Prepare USB drive: FAT32 format, label `RAFFLE_BACKUP`
-- [ ] Reboot the Pi and verify the kiosk launches
+- [ ] Run `bin/setup_kiosk` on the Pi
+- [ ] Reboot and verify the kiosk launches
 - [ ] Test offline operation (disable network before the event)
 - [ ] Run `bin/rails test` before deploying
 
@@ -169,9 +188,13 @@ All deployment config lives in the repo:
 - **Privilege separation** — separate users for display, app service, and admin
 - **Root locked** — root account disabled, SSH root login denied
 - **VNC restricted** — bound to localhost, accessible only via SSH tunnel
-- **Compositor lockdown** — keyboard shortcuts disabled in Wayfire (close, terminal, app switcher)
-- **No autofill** — form inputs disable autocomplete (security conference audience)
+- **Compositor lockdown** — keyboard shortcuts disabled in Wayfire
+- **No autofill** — form inputs disable autocomplete
 - **Session-only auth** — no persistent tokens or cookies with credentials
-- **Encrypted credentials** — admin password stored in Rails encrypted credentials, never in plaintext
+- **Encrypted credentials** — admin password stored in Rails encrypted credentials
 - **Timing-safe comparison** — password checked with `ActiveSupport::SecurityUtils.secure_compare`
 - **Systemd hardening** — `NoNewPrivileges`, `ProtectSystem=strict`, `ProtectHome`, memory limits
+
+## License
+
+See [LICENSE](LICENSE) for details.

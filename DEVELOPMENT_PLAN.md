@@ -28,7 +28,7 @@ The application must function entirely locally.
 
 ## Backend Framework
 
-**Ruby on Rails**
+**Ruby on Rails 8** with **Ruby 4.0** (managed via rbenv)
 
 Reasons: - Fast to build reliable forms and admin interfaces - Excellent
 SQLite support - Easy CSV export - Mature ecosystem - Clean separation
@@ -36,29 +36,29 @@ of models, views, controllers
 
 ## Database
 
-**SQLite**
+**SQLite** in **WAL mode**
 
 Reasons: - Reliable embedded database - Perfect for single-device
-usage - No network dependencies - Easy backup and export
-
-SQLite should run in **WAL mode**.
+usage - No network dependencies - Easy backup and export - WAL mode
+provides crash resilience and concurrent read support
 
 ## Frontend
 
-Local Rails web application rendered in **Chromium kiosk mode**.
+**Hotwire (Turbo + Stimulus)** rendered in **Chromium kiosk mode**.
 
-Advantages: - Modern UI - Easy responsive layout - Touchscreen
-friendly - Easy form handling
+- Turbo Frames for screen transitions (attract → form → success)
+- Stimulus controllers for eligibility gating, idle timeout, and modals
+- **No JavaScript build pipeline** — uses importmap-rails
 
 ## Deployment Model
 
 The system runs:
 
-    Rails app (localhost)
+    Rails app (localhost:3000)
     ↓
-    SQLite database
+    SQLite database (WAL mode)
     ↓
-    Chromium kiosk browser
+    Chromium kiosk browser (fullscreen)
 
 No network access required.
 
@@ -222,45 +222,64 @@ Blocking at kiosk could create awkward interactions.
 Fields:
 
     id
-    first_name
-    last_name
-    email
-    company
-    job_title
-    interest_areas (array or join table)
-    eligibility_confirmed (boolean)
+    first_name          (string, required)
+    last_name           (string, required)
+    email               (string, required, indexed)
+    company             (string, required)
+    job_title           (string, required)
+    interest_areas      (JSON array column, default: [])
+    eligibility_confirmed (boolean, default: false)
+    eligibility_status  (string, default: "eligible", indexed)
+    exclusion_reason    (string, nullable)
     created_at
     updated_at
-    eligibility_status
-    exclusion_reason
+
+Composite index on `(first_name, last_name, company)` for duplicate detection.
+
+## raffle_draws table
+
+Audit log of draw events:
+
+    id
+    winner_id           (foreign key → entrants)
+    eligible_count      (integer, snapshot at draw time)
+    draw_type           (string: "winner" or "alternate_winner")
+    admin_note          (text, nullable)
+    created_at
+    updated_at
 
 ## eligibility_status values
 
-    eligible
-    self_attested_ineligible
-    duplicate_review
-    excluded_admin
-    reinstated_admin
-    winner
-    alternate_winner
+    eligible                — default on submission
+    self_attested_ineligible — checkbox not confirmed (edge case guard)
+    duplicate_review        — auto-flagged by duplicate detection
+    excluded_admin          — manually excluded by admin
+    reinstated_admin        — manually reinstated by admin
+    winner                  — selected by raffle draw
+    alternate_winner        — selected as alternate
 
 ------------------------------------------------------------------------
 
 # 7. Admin Console
 
-Hidden access (password or keyboard shortcut).
+Password-protected at `/admin`. Session-based authentication with no user
+model — a single shared password stored in Rails encrypted credentials
+(falls back to `dev-password` in development).
+
+Hidden access from kiosk screens:
+- **Tap target** — tap the dot in the bottom-right corner 5 times within 1.5 seconds
+- **Keyboard shortcut** — `Ctrl+Shift+A`
 
 Capabilities:
 
--   View entries
--   Search entries
--   Export CSV
+-   View entries (sortable, searchable)
+-   Export CSV (eligible entries, all entries, or winners/alternates)
 -   Flag duplicates
--   Mark exclusions
+-   Mark exclusions (with preset reason buttons)
 -   Reinstate entries
 -   View eligible entry count
--   Run raffle drawing
--   Display winner
+-   Run raffle drawing (winner + alternates)
+-   Display winner with celebration overlay
 -   View backup status
 
 ------------------------------------------------------------------------
@@ -304,22 +323,20 @@ Winner record flagged.
 
 # 9. Data Integrity Strategy
 
-Primary storage:
+Three layers:
 
-SQLite database on Raspberry Pi.
+1.  **SQLite in WAL mode** — crash resilience, concurrent read support
+2.  **Append-only JSONL submission log** (`log/submissions.jsonl`) — one JSON
+    line per submission, flushed immediately. Allows full DB reconstruction
+    if the database is lost.
+3.  **USB backup** — systemd timer every 5 minutes copies the database
+    (via SQLite `.backup` command) and the JSONL log to a USB drive labeled
+    `RAFFLE_BACKUP`. The drive auto-mounts via udev rules.
 
-Backup layers:
-
-1.  Local database
-2.  Append-only submission log
-3.  Periodic database copy to USB drive (if present)
-
-USB mounted via **filesystem UUID**.
-
-Admin dashboard must display:
+Admin dashboard displays:
 
     Last backup time
-    Backup status
+    Backup status (success / drive missing / error)
     Total entries
 
 ------------------------------------------------------------------------
@@ -375,18 +392,46 @@ Prevents abandoned entries.
 
 Environment:
 
--   Raspberry Pi 4
--   Raspberry Pi OS (64‑bit)
+-   Raspberry Pi 4 (4 GB RAM)
+-   Raspberry Pi OS 64‑bit (Debian Trixie)
+-   Wayfire compositor
 -   Chromium kiosk mode
 
-Boot sequence:
+### User Separation
 
-1.  System boots
-2.  Rails server starts
-3.  Chromium launches in kiosk mode
-4.  Browser loads localhost app
+-   **`kiosk` user** — no sudo, no password, auto-login. Runs only the
+    Wayfire compositor and Chromium. Escaping Chromium lands in an
+    unprivileged session with no access to the database or sudo.
+-   **`andre` user** — runs the Rails app via systemd, owns the database,
+    SSH access, sudo.
+
+### Boot Sequence
+
+1.  Pi auto-logins `kiosk` user to Wayfire desktop
+2.  Wayfire config blocks keyboard shortcuts (Alt+F4, Ctrl+W, Ctrl+Q, etc.)
+3.  systemd service starts Rails on `127.0.0.1:3000` under `andre` user
+4.  Wayfire autostart launches Chromium kiosk pointing to localhost:3000
 
 No navigation controls.
+
+### Setup Script
+
+`bin/setup_kiosk` is an idempotent bash script that configures a fresh Pi:
+
+-   Installs system packages via apt
+-   Creates `kiosk` user (auto-login, no privileges)
+-   Installs rbenv + Ruby
+-   Deploys the app (bundle install, db:migrate, asset precompile)
+-   Installs systemd services (Rails app + USB backup timer)
+-   Configures Wayfire compositor lockdown
+-   Sets up Chromium kiosk launch
+-   Installs udev rules for USB auto-mount
+
+### Emergency Access
+
+-   SSH into Pi as `andre`
+-   Or `Ctrl+Alt+F2` to TTY, login as `andre`
+-   VNC via SSH tunnel (bound to localhost only)
 
 ------------------------------------------------------------------------
 
