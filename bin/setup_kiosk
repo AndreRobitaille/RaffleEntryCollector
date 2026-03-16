@@ -19,10 +19,15 @@ APP_SOURCE="$(cd "$(dirname "$0")/.." && pwd)"
 APP_DEST="/opt/raffle"
 RUBY_VERSION=$(cat "$APP_SOURCE/.ruby-version")
 
-# ─── Preflight checks ───────────────────────────────────────────────
+# Base PATH for the raffle system user (which has /usr/sbin/nologin as shell
+# and therefore no login profile to set PATH). Scripts spawned by rbenv/ruby-build
+# use #!/usr/bin/env bash, so /usr/bin and /bin must be present.
+RAFFLE_PATH="$APP_DEST/.rbenv/bin:$APP_DEST/.rbenv/shims:/usr/local/bin:/usr/bin:/bin"
+
+# --- Preflight checks -----------------------------------------------
 
 if [ "$(whoami)" = "root" ]; then
-    fail "Do not run as root. Run as 'andre' — the script uses sudo where needed."
+    fail "Do not run as root. Run as 'andre' -- the script uses sudo where needed."
 fi
 
 if [ "$(whoami)" != "andre" ]; then
@@ -39,7 +44,7 @@ fi
 
 step "Starting kiosk setup from $APP_SOURCE"
 
-# ─── Step 1: Install system packages ────────────────────────────────
+# --- Step 1: Install system packages --------------------------------
 
 step "Installing system packages..."
 sudo apt-get update -qq
@@ -57,7 +62,7 @@ sudo apt-get install -y -qq \
     chromium \
     wayfire
 
-# ─── Step 2: Create raffle system user ──────────────────────────────
+# --- Step 2: Create raffle system user ------------------------------
 
 if ! id -u raffle >/dev/null 2>&1; then
     step "Creating 'raffle' system user..."
@@ -69,7 +74,7 @@ fi
 sudo mkdir -p "$APP_DEST"
 sudo chown raffle:raffle "$APP_DEST"
 
-# ─── Step 3: Create kiosk user ──────────────────────────────────────
+# --- Step 3: Create kiosk user --------------------------------------
 
 if ! id -u kiosk >/dev/null 2>&1; then
     step "Creating 'kiosk' user..."
@@ -83,12 +88,12 @@ fi
 sudo mkdir -p /home/kiosk
 sudo chown kiosk:kiosk /home/kiosk
 
-# ─── Step 4: Lock root account ──────────────────────────────────────
+# --- Step 4: Lock root account --------------------------------------
 
 step "Locking root account..."
 sudo passwd -l root
 
-# ─── Step 5: Harden SSH ─────────────────────────────────────────────
+# --- Step 5: Harden SSH ---------------------------------------------
 
 step "Hardening SSH..."
 if grep -q "^PermitRootLogin" /etc/ssh/sshd_config; then
@@ -98,7 +103,7 @@ else
 fi
 sudo systemctl reload sshd 2>/dev/null || sudo systemctl reload ssh 2>/dev/null || true
 
-# ─── Step 6: Harden VNC ─────────────────────────────────────────────
+# --- Step 6: Harden VNC ---------------------------------------------
 
 step "Restricting VNC to localhost..."
 WAYVNC_DIR="/home/andre/.config/wayvnc"
@@ -118,11 +123,12 @@ else
     warn "wayvnc not found, skipping VNC hardening."
 fi
 
-# ─── Step 7: Install rbenv + Ruby for raffle user ───────────────────
+# --- Step 7: Install rbenv + Ruby for raffle user -------------------
 
 if [ ! -d "$APP_DEST/.rbenv" ]; then
     step "Installing rbenv for raffle user..."
     sudo -u raffle /bin/bash -c "
+        export PATH='$RAFFLE_PATH'
         git clone https://github.com/rbenv/rbenv.git '$APP_DEST/.rbenv'
     "
 else
@@ -132,6 +138,7 @@ fi
 if [ ! -d "$APP_DEST/.rbenv/plugins/ruby-build" ]; then
     step "Installing ruby-build plugin..."
     sudo -u raffle /bin/bash -c "
+        export PATH='$RAFFLE_PATH'
         mkdir -p '$APP_DEST/.rbenv/plugins'
         git clone https://github.com/rbenv/ruby-build.git '$APP_DEST/.rbenv/plugins/ruby-build'
     "
@@ -140,22 +147,22 @@ else
 fi
 
 RBENV="$APP_DEST/.rbenv/bin/rbenv"
-if ! sudo -u raffle /bin/bash -c "'$RBENV' versions --bare 2>/dev/null | grep -qF '$RUBY_VERSION'"; then
+if ! sudo -u raffle /bin/bash -c "export PATH='$RAFFLE_PATH'; '$RBENV' versions --bare 2>/dev/null | grep -qF '$RUBY_VERSION'"; then
     step "Installing Ruby $RUBY_VERSION (this will take a while on Pi)..."
     sudo -u raffle /bin/bash -c "
-        export PATH='$APP_DEST/.rbenv/bin:$APP_DEST/.rbenv/shims:\$PATH'
+        export PATH='$RAFFLE_PATH'
         rbenv install '$RUBY_VERSION'
     "
     step "Setting Ruby $RUBY_VERSION as global default..."
     sudo -u raffle /bin/bash -c "
-        export PATH='$APP_DEST/.rbenv/bin:$APP_DEST/.rbenv/shims:\$PATH'
+        export PATH='$RAFFLE_PATH'
         rbenv global '$RUBY_VERSION'
     "
 else
     step "Ruby $RUBY_VERSION already installed, skipping."
 fi
 
-# ─── Step 8: Deploy app ─────────────────────────────────────────────
+# --- Step 8: Deploy app ---------------------------------------------
 
 step "Deploying app to $APP_DEST..."
 sudo rsync -a --delete \
@@ -177,12 +184,12 @@ sudo chown -R raffle:raffle "$APP_DEST"
 
 step "Installing gems..."
 sudo -u raffle /bin/bash -c "
-    export PATH='$APP_DEST/.rbenv/bin:$APP_DEST/.rbenv/shims:\$PATH'
+    export PATH='$RAFFLE_PATH'
     cd '$APP_DEST'
     bundle install --deployment --without development test
 "
 
-# ─── Step 9: Generate .env file ─────────────────────────────────────
+# --- Step 9: Generate .env file -------------------------------------
 
 if [ ! -f "$APP_DEST/.env" ]; then
     step "Generating .env file with auto-generated SECRET_KEY_BASE..."
@@ -192,7 +199,7 @@ RAILS_ENV=production
 SECRET_KEY_BASE=$SECRET
 ADMIN_PASSWORD=CHANGE_ME
 EOF
-    warn ".env created — you MUST change ADMIN_PASSWORD before going live!"
+    warn ".env created -- you MUST change ADMIN_PASSWORD before going live!"
 else
     step ".env already exists, skipping (won't overwrite your secrets)."
 fi
@@ -200,26 +207,26 @@ fi
 sudo chmod 600 "$APP_DEST/.env"
 sudo chown raffle:raffle "$APP_DEST/.env"
 
-# ─── Step 10: Setup database ────────────────────────────────────────
+# --- Step 10: Setup database ----------------------------------------
 
 step "Setting up production database..."
 sudo -u raffle /bin/bash -c "
-    export PATH='$APP_DEST/.rbenv/bin:$APP_DEST/.rbenv/shims:\$PATH'
+    export PATH='$RAFFLE_PATH'
     cd '$APP_DEST'
     RAILS_ENV=production bundle exec rails db:create 2>/dev/null || true
     RAILS_ENV=production bundle exec rails db:migrate
 "
 
-# ─── Step 11: Precompile assets ─────────────────────────────────────
+# --- Step 11: Precompile assets -------------------------------------
 
 step "Precompiling assets..."
 sudo -u raffle /bin/bash -c "
-    export PATH='$APP_DEST/.rbenv/bin:$APP_DEST/.rbenv/shims:\$PATH'
+    export PATH='$RAFFLE_PATH'
     cd '$APP_DEST'
     RAILS_ENV=production bundle exec rails assets:precompile
 "
 
-# ─── Step 12: Install systemd services ──────────────────────────────
+# --- Step 12: Install systemd services ------------------------------
 
 step "Installing systemd services..."
 sudo cp "$APP_DEST/config/systemd/raffle-kiosk.service" /etc/systemd/system/
@@ -230,7 +237,7 @@ sudo systemctl daemon-reload
 sudo systemctl enable raffle-kiosk.service
 sudo systemctl enable raffle-backup.timer
 
-# ─── Step 13: Configure auto-login for kiosk user ───────────────────
+# --- Step 13: Configure auto-login for kiosk user -------------------
 
 step "Configuring auto-login for kiosk user on tty1..."
 sudo mkdir -p /etc/systemd/system/getty@tty1.service.d
@@ -240,7 +247,7 @@ ExecStart=
 ExecStart=-/sbin/agetty --autologin kiosk --noclear %I $TERM
 AUTOLOGIN
 
-# ─── Step 14: Install Wayfire config ─────────────────────────────────
+# --- Step 14: Install Wayfire config ---------------------------------
 
 step "Installing Wayfire config and login profile for kiosk user..."
 sudo -u kiosk mkdir -p /home/kiosk/.config
@@ -249,14 +256,14 @@ sudo chown kiosk:kiosk /home/kiosk/.config/wayfire.ini
 sudo cp "$APP_DEST/config/kiosk/bash_profile" /home/kiosk/.bash_profile
 sudo chown kiosk:kiosk /home/kiosk/.bash_profile
 
-# ─── Step 15: Install Chromium launcher ──────────────────────────────
+# --- Step 15: Install Chromium launcher ------------------------------
 
 step "Installing Chromium kiosk launcher..."
 sudo cp "$APP_DEST/config/kiosk/chromium-kiosk.sh" /home/kiosk/chromium-kiosk.sh
 sudo chmod +x /home/kiosk/chromium-kiosk.sh
 sudo chown kiosk:kiosk /home/kiosk/chromium-kiosk.sh
 
-# ─── Step 16: Install udev rule and mount helper ────────────────────
+# --- Step 16: Install udev rule and mount helper --------------------
 
 step "Installing udev rule for USB backup..."
 sudo cp "$APP_DEST/config/kiosk/99-raffle-backup.rules" /etc/udev/rules.d/
@@ -265,12 +272,12 @@ sudo chmod 755 /usr/local/bin/raffle-usb-mount
 sudo chown root:root /usr/local/bin/raffle-usb-mount
 sudo udevadm control --reload-rules
 
-# ─── Done ────────────────────────────────────────────────────────────
+# --- Done ------------------------------------------------------------
 
 echo ""
-echo -e "${GREEN}════════════════════════════════════════════════════════════${NC}"
+echo -e "${GREEN}============================================================${NC}"
 echo -e "${GREEN} Kiosk setup complete!${NC}"
-echo -e "${GREEN}════════════════════════════════════════════════════════════${NC}"
+echo -e "${GREEN}============================================================${NC}"
 echo ""
 echo "Next steps:"
 echo "  1. Edit /opt/raffle/.env to set ADMIN_PASSWORD"
