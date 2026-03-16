@@ -65,6 +65,9 @@ if ! id -u raffle >/dev/null 2>&1; then
 else
     step "'raffle' user already exists, skipping."
 fi
+# Ensure home directory exists even if user was created in a previous partial run
+sudo mkdir -p "$APP_DEST"
+sudo chown raffle:raffle "$APP_DEST"
 
 # ─── Step 3: Create kiosk user ──────────────────────────────────────
 
@@ -76,6 +79,9 @@ if ! id -u kiosk >/dev/null 2>&1; then
 else
     step "'kiosk' user already exists, skipping."
 fi
+# Ensure home directory exists even if user was created in a previous partial run
+sudo mkdir -p /home/kiosk
+sudo chown kiosk:kiosk /home/kiosk
 
 # ─── Step 4: Lock root account ──────────────────────────────────────
 
@@ -116,20 +122,33 @@ fi
 
 if [ ! -d "$APP_DEST/.rbenv" ]; then
     step "Installing rbenv for raffle user..."
-    sudo -u raffle -s /bin/bash -c "
+    sudo -u raffle /bin/bash -c "
         git clone https://github.com/rbenv/rbenv.git '$APP_DEST/.rbenv'
-        git clone https://github.com/rbenv/ruby-build.git '$APP_DEST/.rbenv/plugins/ruby-build'
     "
 else
     step "rbenv already installed, skipping."
 fi
 
+if [ ! -d "$APP_DEST/.rbenv/plugins/ruby-build" ]; then
+    step "Installing ruby-build plugin..."
+    sudo -u raffle /bin/bash -c "
+        mkdir -p '$APP_DEST/.rbenv/plugins'
+        git clone https://github.com/rbenv/ruby-build.git '$APP_DEST/.rbenv/plugins/ruby-build'
+    "
+else
+    step "ruby-build already installed, skipping."
+fi
+
 RBENV="$APP_DEST/.rbenv/bin/rbenv"
-if ! sudo -u raffle -s /bin/bash -c "'$RBENV' versions --bare 2>/dev/null | grep -qF '$RUBY_VERSION'"; then
+if ! sudo -u raffle /bin/bash -c "'$RBENV' versions --bare 2>/dev/null | grep -qF '$RUBY_VERSION'"; then
     step "Installing Ruby $RUBY_VERSION (this will take a while on Pi)..."
-    sudo -u raffle -s /bin/bash -c "
+    sudo -u raffle /bin/bash -c "
         export PATH='$APP_DEST/.rbenv/bin:$APP_DEST/.rbenv/shims:\$PATH'
         rbenv install '$RUBY_VERSION'
+    "
+    step "Setting Ruby $RUBY_VERSION as global default..."
+    sudo -u raffle /bin/bash -c "
+        export PATH='$APP_DEST/.rbenv/bin:$APP_DEST/.rbenv/shims:\$PATH'
         rbenv global '$RUBY_VERSION'
     "
 else
@@ -157,7 +176,7 @@ sudo -u raffle mkdir -p "$APP_DEST/tmp" "$APP_DEST/log" "$APP_DEST/db"
 sudo chown -R raffle:raffle "$APP_DEST"
 
 step "Installing gems..."
-sudo -u raffle -s /bin/bash -c "
+sudo -u raffle /bin/bash -c "
     export PATH='$APP_DEST/.rbenv/bin:$APP_DEST/.rbenv/shims:\$PATH'
     cd '$APP_DEST'
     bundle install --deployment --without development test
@@ -173,17 +192,18 @@ RAILS_ENV=production
 SECRET_KEY_BASE=$SECRET
 ADMIN_PASSWORD=CHANGE_ME
 EOF
-    sudo chmod 600 "$APP_DEST/.env"
-    sudo chown raffle:raffle "$APP_DEST/.env"
     warn ".env created — you MUST change ADMIN_PASSWORD before going live!"
 else
     step ".env already exists, skipping (won't overwrite your secrets)."
 fi
+# Always enforce correct permissions (in case a previous run failed between create and chmod)
+sudo chmod 600 "$APP_DEST/.env"
+sudo chown raffle:raffle "$APP_DEST/.env"
 
 # ─── Step 10: Setup database ────────────────────────────────────────
 
 step "Setting up production database..."
-sudo -u raffle -s /bin/bash -c "
+sudo -u raffle /bin/bash -c "
     export PATH='$APP_DEST/.rbenv/bin:$APP_DEST/.rbenv/shims:\$PATH'
     cd '$APP_DEST'
     RAILS_ENV=production bundle exec rails db:create 2>/dev/null || true
@@ -193,7 +213,7 @@ sudo -u raffle -s /bin/bash -c "
 # ─── Step 11: Precompile assets ─────────────────────────────────────
 
 step "Precompiling assets..."
-sudo -u raffle -s /bin/bash -c "
+sudo -u raffle /bin/bash -c "
     export PATH='$APP_DEST/.rbenv/bin:$APP_DEST/.rbenv/shims:\$PATH'
     cd '$APP_DEST'
     RAILS_ENV=production bundle exec rails assets:precompile
