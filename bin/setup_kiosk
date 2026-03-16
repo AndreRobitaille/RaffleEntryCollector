@@ -131,6 +131,7 @@ else
     step "Installing rbenv for raffle user..."
     sudo rm -rf "$APP_DEST/.rbenv"
     sudo -u raffle /bin/bash -c "
+        cd /tmp
         export PATH='$RAFFLE_PATH'
         git clone https://github.com/rbenv/rbenv.git '$APP_DEST/.rbenv'
     "
@@ -142,6 +143,7 @@ else
     step "Installing ruby-build plugin..."
     sudo rm -rf "$APP_DEST/.rbenv/plugins/ruby-build"
     sudo -u raffle /bin/bash -c "
+        cd /tmp
         export PATH='$RAFFLE_PATH'
         mkdir -p '$APP_DEST/.rbenv/plugins'
         git clone https://github.com/rbenv/ruby-build.git '$APP_DEST/.rbenv/plugins/ruby-build'
@@ -149,14 +151,17 @@ else
 fi
 
 RBENV="$APP_DEST/.rbenv/bin/rbenv"
-if ! sudo -u raffle /bin/bash -c "export PATH='$RAFFLE_PATH'; '$RBENV' versions --bare 2>/dev/null | grep -qF '$RUBY_VERSION'"; then
+if ! sudo -u raffle /bin/bash -c "cd '$APP_DEST' && export PATH='$RAFFLE_PATH'; '$RBENV' versions --bare 2>/dev/null | grep -qF '$RUBY_VERSION'"; then
     step "Installing Ruby $RUBY_VERSION (this will take a while on Pi)..."
     sudo -u raffle /bin/bash -c "
+        cd '$APP_DEST'
         export PATH='$RAFFLE_PATH'
+        export MAKE_OPTS='-j 2'
         rbenv install '$RUBY_VERSION'
     "
     step "Setting Ruby $RUBY_VERSION as global default..."
     sudo -u raffle /bin/bash -c "
+        cd '$APP_DEST'
         export PATH='$RAFFLE_PATH'
         rbenv global '$RUBY_VERSION'
     "
