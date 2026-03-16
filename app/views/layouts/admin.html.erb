@@ -17,6 +17,7 @@
         <%= link_to "Entries", admin_entries_path, class: "admin-header__link #{'admin-header__link--active' if controller_name == 'entries'}" %>
         <%= link_to "Export", admin_export_path, class: "admin-header__link #{'admin-header__link--active' if controller_name == 'exports'}" %>
         <%= link_to "Raffle", admin_raffle_path, class: "admin-header__link #{'admin-header__link--active' if controller_name == 'raffle'}" %>
+        <%= link_to "Management", admin_management_path, class: "admin-header__link #{'admin-header__link--active' if controller_name == 'management'}" %>
       </div>
       <div class="admin-header__right">
         <%= button_to "Logout", admin_logout_path, method: :delete, class: "admin-header__link" %>

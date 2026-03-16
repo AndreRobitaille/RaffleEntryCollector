@@ -24,6 +24,13 @@ Rails.application.routes.draw do
     resource :raffle, only: [ :show ], controller: "raffle" do
       post :draw
     end
+
+    resource :management, only: [ :show ], controller: "management" do
+      post :reset_drawing
+      post :populate_demo
+      post :clear_entrants
+      post :factory_reset
+    end
   end
 
   get "up" => "rails/health#show", as: :rails_health_check
