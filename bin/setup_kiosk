@@ -125,25 +125,27 @@ fi
 
 # --- Step 7: Install rbenv + Ruby for raffle user -------------------
 
-if [ ! -d "$APP_DEST/.rbenv" ]; then
+if [ -d "$APP_DEST/.rbenv/.git" ]; then
+    step "rbenv already installed, skipping."
+else
     step "Installing rbenv for raffle user..."
+    sudo rm -rf "$APP_DEST/.rbenv"
     sudo -u raffle /bin/bash -c "
         export PATH='$RAFFLE_PATH'
         git clone https://github.com/rbenv/rbenv.git '$APP_DEST/.rbenv'
     "
-else
-    step "rbenv already installed, skipping."
 fi
 
-if [ ! -d "$APP_DEST/.rbenv/plugins/ruby-build" ]; then
+if [ -d "$APP_DEST/.rbenv/plugins/ruby-build/.git" ]; then
+    step "ruby-build already installed, skipping."
+else
     step "Installing ruby-build plugin..."
+    sudo rm -rf "$APP_DEST/.rbenv/plugins/ruby-build"
     sudo -u raffle /bin/bash -c "
         export PATH='$RAFFLE_PATH'
         mkdir -p '$APP_DEST/.rbenv/plugins'
         git clone https://github.com/rbenv/ruby-build.git '$APP_DEST/.rbenv/plugins/ruby-build'
     "
-else
-    step "ruby-build already installed, skipping."
 fi
 
 RBENV="$APP_DEST/.rbenv/bin/rbenv"
