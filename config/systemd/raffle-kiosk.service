@@ -1,0 +1,31 @@
+[Unit]
+Description=Raffle Entry Collector (Rails/Puma)
+After=local-fs.target
+
+[Service]
+Type=simple
+User=raffle
+Group=raffle
+WorkingDirectory=/opt/raffle
+EnvironmentFile=/opt/raffle/.env
+Environment=RAILS_ENV=production
+
+ExecStart=/opt/raffle/.rbenv/shims/bundle exec puma -C config/puma.rb
+
+Restart=always
+RestartSec=5
+
+StandardOutput=journal
+StandardError=journal
+
+# Memory safety net — restart if leak develops (Pi 4 has 4GB)
+MemoryMax=512M
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/raffle/db /opt/raffle/log /opt/raffle/tmp
+
+[Install]
+WantedBy=multi-user.target
