@@ -1,1 +1,78 @@
-<h1>Management</h1>
+<h1 class="admin-mgmt__title">Management</h1>
+
+<%# === Raffle Section === %>
+<div class="admin-mgmt__section">
+  <h2 class="admin-mgmt__section-title">Raffle</h2>
+
+  <div class="admin-mgmt__card">
+    <div class="admin-mgmt__card-body">
+      <div class="admin-mgmt__card-text">
+        <h3 class="admin-mgmt__card-title">Reset Drawing</h3>
+        <p class="admin-mgmt__card-desc">Undo the raffle drawing. Resets all winners and alternates back to eligible status and removes draw history. Entrants are not affected.</p>
+      </div>
+      <% if @draw_exists %>
+        <%= button_to "Reset Drawing", reset_drawing_admin_management_path,
+            class: "admin-btn admin-btn--primary",
+            data: { turbo_confirm: "Are you sure you want to reset the drawing? This will restore all winners to eligible status." } %>
+      <% else %>
+        <button class="admin-btn admin-btn--primary admin-btn--disabled" disabled>No Drawing to Reset</button>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<%# === Data Section === %>
+<div class="admin-mgmt__section">
+  <h2 class="admin-mgmt__section-title">Data</h2>
+
+  <%# Populate Demo Data %>
+  <div class="admin-mgmt__card">
+    <div class="admin-mgmt__card-body">
+      <div class="admin-mgmt__card-text">
+        <h3 class="admin-mgmt__card-title">Populate Demo Data</h3>
+        <p class="admin-mgmt__card-desc">Add 300 realistic demo entrants for testing and demonstrations. Requires an empty database.</p>
+      </div>
+      <% if @entrant_count == 0 %>
+        <%= button_to "Populate", populate_demo_admin_management_path,
+            class: "admin-btn admin-btn--primary",
+            data: { turbo_confirm: "Add 300 demo entrants to the database?" } %>
+      <% else %>
+        <button class="admin-btn admin-btn--primary admin-btn--disabled" disabled>Database Not Empty (<%= @entrant_count %>)</button>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Clear Entrants %>
+  <div class="admin-mgmt__card admin-mgmt__card--danger-light">
+    <div class="admin-mgmt__card-body admin-mgmt__card-body--stacked">
+      <div class="admin-mgmt__card-text">
+        <h3 class="admin-mgmt__card-title">Clear Entrants</h3>
+        <p class="admin-mgmt__card-desc">Delete all entrants and draw history from the database. Logs and USB backups are preserved (log file timestamped to prevent overwrites).</p>
+      </div>
+      <%= form_with url: clear_entrants_admin_management_path, method: :post, class: "admin-mgmt__confirm-form" do |f| %>
+        <div class="admin-mgmt__confirm-field">
+          <%= f.label :confirmation, 'Type "reset" to confirm', class: "admin-mgmt__confirm-label" %>
+          <%= f.text_field :confirmation, class: "admin-mgmt__confirm-input", autocomplete: "off", spellcheck: "false" %>
+        </div>
+        <%= f.submit "Clear All Entrants", class: "admin-btn admin-btn--danger" %>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Factory Reset %>
+  <div class="admin-mgmt__card admin-mgmt__card--danger-heavy">
+    <div class="admin-mgmt__card-body admin-mgmt__card-body--stacked">
+      <div class="admin-mgmt__card-text">
+        <h3 class="admin-mgmt__card-title admin-mgmt__card-title--danger">Factory Reset</h3>
+        <p class="admin-mgmt__card-desc">Delete everything — all entrants, draw history, submission logs, and USB backups. This cannot be undone.</p>
+      </div>
+      <%= form_with url: factory_reset_admin_management_path, method: :post, class: "admin-mgmt__confirm-form" do |f| %>
+        <div class="admin-mgmt__confirm-field">
+          <%= f.label :confirmation, 'Type "delete everything" to confirm', class: "admin-mgmt__confirm-label" %>
+          <%= f.text_field :confirmation, class: "admin-mgmt__confirm-input", autocomplete: "off", spellcheck: "false" %>
+        </div>
+        <%= f.submit "Factory Reset", class: "admin-btn admin-btn--danger" %>
+      <% end %>
+    </div>
+  </div>
+</div>

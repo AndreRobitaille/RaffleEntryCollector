@@ -974,3 +974,110 @@ html, .admin-body {
 .admin-login__back:hover {
   color: var(--sky);
 }
+
+/* ==========================================================================
+   Management Page
+   ========================================================================== */
+
+.admin-mgmt__title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 24px;
+}
+
+.admin-mgmt__section {
+  margin-bottom: 32px;
+}
+
+.admin-mgmt__section-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--brand);
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+}
+
+.admin-mgmt__card {
+  background: var(--brand-deep);
+  border: 1px solid var(--brand);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  margin-bottom: 12px;
+}
+
+.admin-mgmt__card--danger-light {
+  border-color: rgba(255, 107, 107, 0.2);
+}
+
+.admin-mgmt__card--danger-heavy {
+  border-color: rgba(255, 107, 107, 0.4);
+}
+
+.admin-mgmt__card-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.admin-mgmt__card-body--stacked {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.admin-mgmt__card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--white);
+  margin-bottom: 4px;
+}
+
+.admin-mgmt__card-title--danger {
+  color: var(--error);
+}
+
+.admin-mgmt__card-desc {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.admin-mgmt__confirm-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.admin-mgmt__confirm-field {
+  flex: 1;
+  max-width: 280px;
+}
+
+.admin-mgmt__confirm-label {
+  display: block;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.admin-mgmt__confirm-input {
+  width: 100%;
+  background: rgba(26, 24, 53, 0.9);
+  border: 1px solid var(--brand);
+  color: var(--white);
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.admin-mgmt__confirm-input:focus {
+  border-color: var(--sky);
+}
