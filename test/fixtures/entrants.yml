@@ -74,3 +74,24 @@ reinstated_diana:
   interest_areas:
     - "Cloud & Infrastructure Security"
     - "Space Systems Security"
+
+sponsor_frank:
+  first_name: Frank
+  last_name: Vendor
+  email: frank@sponsor.com
+  company: CypherCon Sponsor LLC
+  job_title: Account Executive
+  eligibility_confirmed: true
+  eligibility_status: eligible
+  interest_areas: []
+
+sponsor_gina:
+  first_name: Gina
+  last_name: Sales
+  email: gina@sponsor.com
+  company: CypherCon Sponsor LLC
+  job_title: Sales Manager
+  eligibility_confirmed: true
+  eligibility_status: excluded_admin
+  exclusion_reason: Sponsor / Vendor
+  interest_areas: []
