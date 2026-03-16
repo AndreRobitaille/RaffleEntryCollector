@@ -76,7 +76,9 @@ sudo systemctl restart raffle-kiosk.service
 sleep 2
 if systemctl is-active --quiet raffle-kiosk.service; then
     step "Refreshing kiosk browser..."
-    sudo -u kiosk pkill -f chromium 2>/dev/null || true
+    # Kill only the chromium browser process, not the chromium-kiosk.sh wrapper
+    # that provides the restart loop. Use pkill without -f to match process name only.
+    sudo -u kiosk pkill -x chromium 2>/dev/null || true
     echo ""
     echo -e "${GREEN}Deploy complete — service is running, browser restarting.${NC}"
 else
