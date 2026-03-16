@@ -197,7 +197,7 @@ fi
 
 # Fix ownership after root rsync, then create writable directories
 sudo chown -R raffle:raffle "$APP_DEST"
-sudo -u raffle mkdir -p "$APP_DEST/tmp" "$APP_DEST/log" "$APP_DEST/db"
+sudo -u raffle mkdir -p "$APP_DEST/tmp" "$APP_DEST/log" "$APP_DEST/db" "$APP_DEST/storage"
 
 step "Installing gems..."
 sudo -u raffle /bin/bash -c "
