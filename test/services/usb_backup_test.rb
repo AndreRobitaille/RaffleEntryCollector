@@ -19,26 +19,30 @@ class UsbBackupTest < ActiveSupport::TestCase
   end
 
   test "copies JSONL log if it exists" do
-    log_path = Rails.root.join("log", "submissions.jsonl")
+    log_dir = Dir.mktmpdir("usb_log_test")
+    log_path = Pathname.new(File.join(log_dir, "submissions.jsonl"))
     File.write(log_path, "{\"test\": true}\n")
 
     UsbBackup.stub(:backup_database, true) do
-      result = UsbBackup.perform(target_dir: @backup_dir)
-      assert result[:success]
-      assert File.exist?(File.join(@backup_dir, "submissions.jsonl"))
+      UsbBackup.stub(:log_path, log_path) do
+        result = UsbBackup.perform(target_dir: @backup_dir)
+        assert result[:success]
+        assert File.exist?(File.join(@backup_dir, "submissions.jsonl"))
+      end
     end
   ensure
-    log_path.delete if log_path.exist?
+    FileUtils.rm_rf(log_dir)
   end
 
   test "succeeds without JSONL log file" do
-    log_path = Rails.root.join("log", "submissions.jsonl")
-    log_path.delete if log_path.exist?
+    log_path = Pathname.new("/tmp/nonexistent_#{Process.pid}_submissions.jsonl")
 
     UsbBackup.stub(:backup_database, true) do
-      result = UsbBackup.perform(target_dir: @backup_dir)
-      assert result[:success]
-      assert_not File.exist?(File.join(@backup_dir, "submissions.jsonl"))
+      UsbBackup.stub(:log_path, log_path) do
+        result = UsbBackup.perform(target_dir: @backup_dir)
+        assert result[:success]
+        assert_not File.exist?(File.join(@backup_dir, "submissions.jsonl"))
+      end
     end
   end
 

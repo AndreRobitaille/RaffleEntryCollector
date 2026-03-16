@@ -16,7 +16,6 @@ class UsbBackup
       return failure("sqlite3 backup command failed")
     end
 
-    log_path = Rails.root.join("log", "submissions.jsonl")
     if log_path.exist?
       FileUtils.cp(log_path, File.join(target_dir, "submissions.jsonl"))
     end
@@ -32,6 +31,10 @@ class UsbBackup
     path = Pathname.new(status_file)
     return {} unless path.exist?
     JSON.parse(path.read, symbolize_names: true)
+  end
+
+  def self.log_path
+    Rails.root.join("log", "submissions.jsonl")
   end
 
   def self.find_usb_mount
