@@ -7,8 +7,8 @@ Kiosk-based raffle entry and lead collection app for the Final Frontier Security
 - **Kiosk entry form** — attendees enter name, email, company, job title, and select interest areas. 90-second idle timeout resets to the attract screen.
 - **Duplicate detection** — flags matching emails or name+company pairs for admin review (never blocks the kiosk).
 - **Admin console** (`/admin`) — password-protected dashboard for managing entries, excluding/reinstating entrants, and searching/sorting.
-- **Raffle drawing** — cryptographically secure random selection with audit trail. Tracks winner and alternate.
-- **CSV export** — download eligible or all entries with interest area columns.
+- **Raffle drawing** — cryptographically secure random selection draws winner + 2 alternates in one action, with full audit trail. Full-screen celebration overlay for announcing winners at the booth.
+- **CSV export** — download eligible entries, all entries, or winners/alternates with contact info and draw order.
 - **USB backup** — automatic database and submission log backup to a labeled USB drive.
 - **Three-layer data integrity** — SQLite (WAL mode), append-only JSONL submission log, and periodic USB backup.
 
