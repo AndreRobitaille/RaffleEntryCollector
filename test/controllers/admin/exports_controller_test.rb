@@ -105,6 +105,45 @@ class Admin::ExportsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "index shows excluded count and winners count" do
+    login_as_admin
+    get admin_export_path
+    assert_response :success
+    assert_select ".admin-stat", minimum: 4
+  end
+
+  test "download winners CSV with draws present" do
+    login_as_admin
+    RaffleDraw.perform_full_draw!
+
+    get admin_export_download_path(type: "winners")
+    assert_response :success
+    assert_equal "text/csv", response.media_type
+
+    csv = CSV.parse(response.body, headers: true)
+    assert_equal 3, csv.size
+
+    assert_includes csv.headers, "draw_type"
+    assert_includes csv.headers, "first_name"
+    assert_includes csv.headers, "email"
+    assert_includes csv.headers, "company"
+    assert_includes csv.headers, "drawn_at"
+
+    assert_equal "Winner", csv[0]["draw_type"]
+    assert_equal "Alternate #1", csv[1]["draw_type"]
+    assert_equal "Alternate #2", csv[2]["draw_type"]
+  end
+
+  test "download winners CSV with no draws returns empty CSV with headers" do
+    login_as_admin
+    get admin_export_download_path(type: "winners")
+    assert_response :success
+
+    csv = CSV.parse(response.body, headers: true)
+    assert_equal 0, csv.size
+    assert_includes csv.headers, "draw_type"
+  end
+
   test "INTEREST_AREA_COLUMNS covers all Entrant::INTEREST_AREA_OPTIONS" do
     assert_equal Entrant::INTEREST_AREA_OPTIONS, Admin::ExportsController::INTEREST_AREA_COLUMNS.keys
   end
