@@ -204,15 +204,81 @@ if [ ! -f "$APP_DEST/.env" ]; then
     sudo -u raffle bash -c "cat > '$APP_DEST/.env'" <<EOF
 RAILS_ENV=production
 SECRET_KEY_BASE=$SECRET
-ADMIN_PASSWORD=CHANGE_ME
 EOF
-    warn ".env created -- you MUST change ADMIN_PASSWORD before going live!"
 else
     step ".env already exists, skipping (won't overwrite your secrets)."
 fi
 # Always enforce correct permissions (in case a previous run failed between create and chmod)
 sudo chmod 600 "$APP_DEST/.env"
 sudo chown raffle:raffle "$APP_DEST/.env"
+
+# --- Step 9b: Set admin password via Rails credentials ---------------
+
+step "Checking admin password in Rails credentials..."
+if [ ! -f "$APP_DEST/config/master.key" ]; then
+    step "No master.key found -- setting up Rails credentials..."
+    echo ""
+    echo -e "${YELLOW}============================================================${NC}"
+    echo -e "${YELLOW} Admin password setup${NC}"
+    echo -e "${YELLOW}============================================================${NC}"
+    echo ""
+    echo "  The admin console at /admin requires a password."
+    echo "  Without this, you CANNOT manage entries, draw raffle"
+    echo "  winners, or export data."
+    echo ""
+    while true; do
+        read -r -s -p "  Enter admin password: " ADMIN_PW
+        echo ""
+        if [ -z "$ADMIN_PW" ]; then
+            echo -e "  ${RED}Password cannot be empty.${NC}"
+            continue
+        fi
+        read -r -s -p "  Confirm admin password: " ADMIN_PW_CONFIRM
+        echo ""
+        if [ "$ADMIN_PW" != "$ADMIN_PW_CONFIRM" ]; then
+            echo -e "  ${RED}Passwords do not match. Try again.${NC}"
+            continue
+        fi
+        break
+    done
+
+    # Write password to a temp file (raffle-owned, 600 perms) so it never
+    # appears in process arguments or shell history. Shred it when done.
+    PW_TMPFILE=$(mktemp /tmp/raffle-pw.XXXXXX)
+    chmod 600 "$PW_TMPFILE"
+    printf '%s' "$ADMIN_PW" > "$PW_TMPFILE"
+    sudo chown raffle:raffle "$PW_TMPFILE"
+    unset ADMIN_PW ADMIN_PW_CONFIRM
+
+    # Generate master key directly into the target file
+    openssl rand -hex 16 | sudo -u raffle tee "$APP_DEST/config/master.key" >/dev/null
+    sudo chmod 600 "$APP_DEST/config/master.key"
+
+    sudo -u raffle /bin/bash -c "
+        export PATH='$RAFFLE_PATH'
+        cd '$APP_DEST'
+        RAILS_ENV=production bundle exec rails runner '
+            pw = File.read(ARGV[0]).strip
+            creds = ActiveSupport::EncryptedConfiguration.new(
+                config_path: Rails.root.join(\"config/credentials.yml.enc\"),
+                key_path: Rails.root.join(\"config/master.key\"),
+                env_key: \"RAILS_MASTER_KEY\",
+                raise_if_missing_key: true
+            )
+            creds.write({ \"admin_password\" => pw }.to_yaml)
+        ' '$PW_TMPFILE'
+    "
+
+    # Securely delete the temp file
+    shred -u "$PW_TMPFILE" 2>/dev/null || rm -f "$PW_TMPFILE"
+
+    sudo chmod 600 "$APP_DEST/config/master.key" "$APP_DEST/config/credentials.yml.enc"
+    sudo chown raffle:raffle "$APP_DEST/config/master.key" "$APP_DEST/config/credentials.yml.enc"
+
+    echo -e "  ${GREEN}Admin password encrypted and saved.${NC}"
+else
+    step "master.key exists, credentials already configured."
+fi
 
 # --- Step 10: Setup database ----------------------------------------
 
@@ -281,23 +347,61 @@ sudo udevadm control --reload-rules
 
 # --- Done ------------------------------------------------------------
 
+PI_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+PI_IP=${PI_IP:-<pi-ip>}
+
 echo ""
 echo -e "${GREEN}============================================================${NC}"
 echo -e "${GREEN} Kiosk setup complete!${NC}"
 echo -e "${GREEN}============================================================${NC}"
 echo ""
-echo "Next steps:"
-echo "  1. Edit /opt/raffle/.env to set ADMIN_PASSWORD"
-echo "     (SECRET_KEY_BASE was auto-generated)"
-echo "  2. Reboot the Pi: sudo reboot"
+echo "BEFORE THE EVENT:"
+echo "  1. Prepare a USB backup drive:"
+echo "     - Format as FAT32, label it exactly: RAFFLE_BACKUP"
+echo "     - Plug it in before the event starts"
+echo "     - Backups run automatically every 5 minutes"
 echo ""
-echo "After reboot:"
-echo "  - Rails starts automatically via systemd"
-echo "  - Kiosk user auto-logins and launches Chromium"
-echo "  - USB backup runs every 5 minutes (plug in RAFFLE_BACKUP drive)"
+echo "  2. Reboot the Pi to start the kiosk:"
+echo "     sudo reboot"
 echo ""
-echo "Emergency access:"
-echo "  - Ctrl+Alt+F2 for TTY login as 'andre'"
-echo "  - SSH: ssh andre@<pi-ip>"
-echo "  - VNC: ssh -L 5900:localhost:5900 andre@<pi-ip>"
+echo "WHAT HAPPENS ON BOOT:"
+echo "  - Rails server starts automatically"
+echo "  - Kiosk user auto-logins (no password needed)"
+echo "  - Chromium opens fullscreen to the raffle entry form"
+echo "  - Startup takes about 30-45 seconds"
+echo ""
+echo "ADMIN CONSOLE:"
+echo "  - URL: http://127.0.0.1:3000/admin"
+echo "  - Use the password you just set during setup"
+echo "  - From the kiosk screen: plug in a keyboard, press Ctrl+L,"
+echo "    type the URL above, and press Enter"
+echo "  - From your laptop: ssh andre@$PI_IP"
+echo ""
+echo "  What you can do in the admin console:"
+echo "    - View/search all entries"
+echo "    - Exclude or reinstate entrants"
+echo "    - Draw raffle winner + 2 alternates"
+echo "    - Export entries or winners as CSV"
+echo ""
+echo "DRAWING WINNERS:"
+echo "  1. Go to Admin > Raffle"
+echo "  2. Click 'Draw Winner + 2 Alternates' (needs 3+ eligible entries)"
+echo "  3. Click 'Announce' to display the winner on screen"
+echo ""
+echo "IF SOMETHING GOES WRONG:"
+echo "  - Kiosk frozen?   Hard power-cycle the Pi (unplug, plug back in)"
+echo "  - Chromium crash?  It restarts automatically"
+echo "  - Rails crash?     systemd restarts it within 5 seconds"
+echo "  - Need a shell?    Ctrl+Alt+F2 on the kiosk, or SSH from laptop:"
+echo "                     ssh andre@$PI_IP"
+echo "  - Check logs:      sudo journalctl -u raffle-kiosk.service -n 50"
+echo "  - Restart Rails:   sudo systemctl restart raffle-kiosk.service"
+echo ""
+echo "CHANGING ADMIN PASSWORD LATER:"
+echo "  ssh andre@$PI_IP"
+echo "  sudo -u raffle /bin/bash -c \\"
+echo "    \"cd $APP_DEST && export PATH='$RAFFLE_PATH' && \\"
+echo "    RAILS_ENV=production EDITOR=nano bundle exec rails credentials:edit\""
+echo "  # Set admin_password: <new-password>, save, then:"
+echo "  sudo systemctl restart raffle-kiosk.service"
 echo ""
