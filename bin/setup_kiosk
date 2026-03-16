@@ -230,8 +230,10 @@ sudo chmod 600 "$APP_DEST/.env"
 sudo chown raffle:raffle "$APP_DEST/.env"
 
 step "Checking Rails credentials..."
-if [ ! -f "$APP_DEST/config/master.key" ]; then
-    step "No master.key found -- setting up Rails credentials..."
+if [ ! -f "$APP_DEST/config/master.key" ] || [ ! -f "$APP_DEST/config/credentials.yml.enc" ]; then
+    # Clean slate: remove both so we don't end up with a mismatched pair
+    sudo rm -f "$APP_DEST/config/master.key" "$APP_DEST/config/credentials.yml.enc"
+    step "Setting up Rails credentials..."
     echo ""
     echo -e "${YELLOW}============================================================${NC}"
     echo -e "${YELLOW} Admin password setup${NC}"
@@ -299,7 +301,7 @@ if [ ! -f "$APP_DEST/config/master.key" ]; then
 
     echo -e "  ${GREEN}Admin password and secret key encrypted and saved.${NC}"
 else
-    step "master.key exists, credentials already configured."
+    step "Credentials already configured (master.key + credentials.yml.enc present)."
 fi
 
 # --- Step 10: Setup database ----------------------------------------
