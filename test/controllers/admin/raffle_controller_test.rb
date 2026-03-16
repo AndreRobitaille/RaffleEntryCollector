@@ -3,7 +3,6 @@ require "test_helper"
 class Admin::RaffleControllerTest < ActionDispatch::IntegrationTest
   setup do
     login_as_admin
-    # Clear any existing draws from other tests
     RaffleDraw.delete_all
   end
 
@@ -22,29 +21,33 @@ class Admin::RaffleControllerTest < ActionDispatch::IntegrationTest
   test "show displays draw dashboard with stats" do
     get admin_raffle_path
     assert_response :success
-    assert_select "button", text: /Draw Winner/i
-  end
-
-  test "show displays entry counts" do
-    get admin_raffle_path
-    assert_response :success
     assert_select ".admin-stat__count", minimum: 3
   end
 
-  test "draw creates a raffle draw and redirects with notice" do
-    post draw_admin_raffle_path
-    assert_redirected_to admin_raffle_path
-    follow_redirect!
-    assert_response :success
-    assert_equal 1, RaffleDraw.count
+  test "show displays draw button when no draw has occurred" do
+    get admin_raffle_path
+    assert_select "button", text: /Draw Winner/i
   end
 
-  test "draw shows winner name in flash notice" do
-    post draw_admin_raffle_path
+  test "draw creates winner and two alternates" do
+    assert_difference "RaffleDraw.count", 3 do
+      post draw_admin_raffle_path
+    end
     assert_redirected_to admin_raffle_path
     follow_redirect!
-    draw = RaffleDraw.last
-    assert_match draw.winner.first_name, flash[:notice]
+    assert_select ".admin-flash--notice"
+  end
+
+  test "draw shows error when fewer than 3 eligible" do
+    # Leave only 2 eligible
+    Entrant.eligible.where.not(id: Entrant.eligible.limit(2).pluck(:id)).update_all(eligibility_status: "excluded_admin")
+
+    assert_no_difference "RaffleDraw.count" do
+      post draw_admin_raffle_path
+    end
+    assert_redirected_to admin_raffle_path
+    follow_redirect!
+    assert_select ".admin-flash--alert"
   end
 
   test "draw with no eligible entries shows error" do
@@ -52,31 +55,33 @@ class Admin::RaffleControllerTest < ActionDispatch::IntegrationTest
     post draw_admin_raffle_path
     assert_redirected_to admin_raffle_path
     follow_redirect!
-    assert_select ".admin-flash--alert", /no eligible/i
+    assert_select ".admin-flash--alert"
+  end
+
+  test "show displays winner cards after draw" do
+    post draw_admin_raffle_path
+    get admin_raffle_path
+
+    assert_select ".admin-winner-card", 3
+    assert_select ".admin-winner-card--winner", 1
+    assert_select ".admin-winner-card--alternate", 2
+  end
+
+  test "show hides draw button after draw is complete" do
+    post draw_admin_raffle_path
+    get admin_raffle_path
+
+    assert_select ".admin-draw-action", 0
   end
 
   test "show displays draw history after a draw" do
-    RaffleDraw.perform_draw!
+    post draw_admin_raffle_path
     get admin_raffle_path
-    assert_response :success
-    assert_select "table tbody tr", count: 1
+    assert_select "table tbody tr", count: 3
   end
 
-  test "draw last eligible entry then fail on next draw" do
-    # Exclude all but one eligible entry
-    Entrant.eligible.where.not(id: entrants(:ada).id).update_all(eligibility_status: "excluded_admin")
-
-    post draw_admin_raffle_path
-    assert_redirected_to admin_raffle_path
-    follow_redirect!
-    assert_equal 1, RaffleDraw.count
-    assert_equal "winner", entrants(:ada).reload.eligibility_status
-
-    # Now no eligible entries remain
-    post draw_admin_raffle_path
-    assert_redirected_to admin_raffle_path
-    follow_redirect!
-    assert_select ".admin-flash--alert", /no eligible/i
-    assert_equal 1, RaffleDraw.count
+  test "show displays instructions before draw" do
+    get admin_raffle_path
+    assert_select ".admin-info-panel"
   end
 end
