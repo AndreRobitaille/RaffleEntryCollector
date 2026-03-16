@@ -60,25 +60,27 @@
   <% when "eligible", "reinstated_admin" %>
     <div class="admin-action admin-action--exclude">
       <span class="admin-action__title">Exclude This Entry</span>
-      <%= form_with url: exclude_admin_entry_path(@entrant), method: :patch, class: "admin-action__form" do |f| %>
-        <div class="admin-action__field">
-          <%= f.label :exclusion_reason, "Reason", class: "admin-action__label" %>
-          <%= f.text_field :exclusion_reason, placeholder: "e.g. CypherCon sponsor employee", class: "admin-action__input" %>
-        </div>
-        <%= f.submit "Exclude", class: "admin-btn admin-btn--danger" %>
-      <% end %>
+      <div class="admin-exclude-reasons">
+        <% %w[Sponsor\ /\ Vendor Event\ Staff Duplicate FFS\ Employee Other].each do |reason| %>
+          <%= button_to reason, exclude_admin_entry_path(@entrant),
+              method: :patch,
+              params: { exclusion_reason: reason },
+              class: "admin-btn admin-btn--danger" %>
+        <% end %>
+      </div>
     </div>
 
   <% when "duplicate_review" %>
     <div class="admin-action admin-action--exclude">
       <span class="admin-action__title">Exclude This Entry</span>
-      <%= form_with url: exclude_admin_entry_path(@entrant), method: :patch, class: "admin-action__form" do |f| %>
-        <div class="admin-action__field">
-          <%= f.label :exclusion_reason, "Reason", class: "admin-action__label" %>
-          <%= f.text_field :exclusion_reason, placeholder: "e.g. Confirmed duplicate", class: "admin-action__input" %>
-        </div>
-        <%= f.submit "Exclude", class: "admin-btn admin-btn--danger" %>
-      <% end %>
+      <div class="admin-exclude-reasons">
+        <% %w[Sponsor\ /\ Vendor Event\ Staff Duplicate FFS\ Employee Other].each do |reason| %>
+          <%= button_to reason, exclude_admin_entry_path(@entrant),
+              method: :patch,
+              params: { exclusion_reason: reason },
+              class: "admin-btn admin-btn--danger" %>
+        <% end %>
+      </div>
     </div>
 
     <div class="admin-action admin-action--reinstate">

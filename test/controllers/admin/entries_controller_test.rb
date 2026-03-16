@@ -244,7 +244,35 @@ class Admin::EntriesControllerTest < ActionDispatch::IntegrationTest
     assert_select "table tr td", text: "Ada"
   end
 
-  # Edge case tests (Task 8)
+  # Exclusion reason buttons tests (Task 8)
+
+  test "show displays exclusion reason buttons for eligible entry" do
+    login_as_admin
+    get admin_entry_path(entrants(:ada))
+    assert_select ".admin-exclude-reasons"
+    assert_select ".admin-exclude-reasons form", 5
+  end
+
+  test "show displays exclusion reason buttons for duplicate_review entry" do
+    login_as_admin
+    get admin_entry_path(entrants(:duplicate_alan))
+    assert_select ".admin-exclude-reasons"
+    assert_select ".admin-exclude-reasons form", 5
+  end
+
+  test "exclude with preset reason stores correct reason" do
+    login_as_admin
+    patch exclude_admin_entry_path(entrants(:ada)), params: { exclusion_reason: "FFS Employee" }
+    assert_equal "FFS Employee", entrants(:ada).reload.exclusion_reason
+  end
+
+  test "show does not display text field for exclusion reason" do
+    login_as_admin
+    get admin_entry_path(entrants(:ada))
+    assert_select "input[type=text][name*=exclusion_reason]", 0
+  end
+
+  # Edge case tests
 
   test "GET /admin/entries/:id for non-existent entry returns 404" do
     login_as_admin
