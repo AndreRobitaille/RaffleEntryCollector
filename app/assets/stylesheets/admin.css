@@ -777,6 +777,220 @@ html, .admin-body {
   width: 100%;
 }
 
+/* ==========================================================================
+   Exclusion / Reinstatement Modal
+   ========================================================================== */
+
+.admin-exclusion-modal,
+.admin-reinstate-modal {
+  border: none;
+  border-radius: 12px;
+  background: var(--surface-solid);
+  color: var(--text);
+  padding: 0;
+  max-width: 480px;
+  width: calc(100vw - 40px);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  overflow: visible;
+}
+
+.admin-exclusion-modal::backdrop,
+.admin-reinstate-modal::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
+}
+
+.admin-modal__content {
+  padding: 0;
+}
+
+.admin-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px 24px 0;
+}
+
+.admin-modal__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--white);
+  margin: 0;
+}
+
+.admin-modal__close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 22px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  transition: color var(--transition);
+}
+
+.admin-modal__close:hover {
+  color: var(--white);
+}
+
+.admin-modal__body {
+  padding: 16px 24px 24px;
+}
+
+.admin-modal__description {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.admin-modal__description strong {
+  color: var(--ice);
+}
+
+.admin-modal__primary-btn {
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.admin-modal__bulk-section {
+  margin-top: 4px;
+}
+
+.admin-modal__divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 16px 0;
+}
+
+.admin-modal__divider::before,
+.admin-modal__divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.admin-modal__preview {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(91, 139, 205, 0.15);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.admin-modal__preview-title {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.admin-modal__preview-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.admin-modal__preview-list li {
+  font-size: 14px;
+  color: var(--ice);
+  padding: 3px 0;
+}
+
+.admin-modal__preview-list li::before {
+  content: "• ";
+  color: var(--text-muted);
+}
+
+.admin-modal__preview-more {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.admin-modal__confirm-group {
+  margin-bottom: 16px;
+}
+
+.admin-modal__confirm-label {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.admin-modal__confirm-label strong {
+  color: var(--ice);
+}
+
+.admin-modal__confirm-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.admin-modal__confirm-input {
+  flex: 1;
+  background: var(--brand-deep);
+  border: 1px solid var(--brand);
+  color: var(--white);
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+}
+
+.admin-modal__confirm-input:focus {
+  border-color: var(--sky);
+}
+
+.admin-modal__confirm-input::placeholder {
+  color: rgba(174, 234, 253, 0.3);
+}
+
+.admin-btn--danger-outline {
+  background: transparent;
+  border: 1px solid rgba(255, 107, 107, 0.4);
+  color: var(--error);
+}
+
+.admin-btn--danger-outline:hover:not(:disabled) {
+  background: rgba(255, 107, 107, 0.1);
+}
+
+.admin-btn--success-outline {
+  background: transparent;
+  border: 1px solid rgba(166, 218, 116, 0.4);
+  color: var(--accent);
+}
+
+.admin-btn--success-outline:hover:not(:disabled) {
+  background: rgba(166, 218, 116, 0.1);
+}
+
+.admin-btn--ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.admin-btn--ghost:hover {
+  border-color: var(--text-muted);
+  color: var(--text);
+}
+
+.admin-modal__cancel-btn {
+  width: 100%;
+  margin-top: 4px;
+}
+
 /* Export card alignment fix */
 .admin-export__option {
   display: flex;
