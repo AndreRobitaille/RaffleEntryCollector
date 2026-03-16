@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# Deploy updated code from andre's dev directory to /opt/raffle and restart.
+# Run as 'andre' user with sudo access on the Raspberry Pi.
+# Usage: bin/deploy
+
+set -euo pipefail
+
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m'
+
+step() { echo -e "${GREEN}==>${NC} $1"; }
+fail() { echo -e "${RED}ERROR:${NC} $1"; exit 1; }
+
+APP_SOURCE="$(cd "$(dirname "$0")/.." && pwd)"
+APP_DEST="/opt/raffle"
+RAFFLE_PATH="$APP_DEST/.rbenv/bin:$APP_DEST/.rbenv/shims:/usr/local/bin:/usr/bin:/bin"
+
+# --- Preflight checks ---
+
+[ "$(whoami)" = "andre" ] || fail "Run as 'andre', not $(whoami)."
+sudo -n true 2>/dev/null || fail "User 'andre' needs passwordless sudo."
+[ -f "$APP_SOURCE/Gemfile" ] || fail "Run from the RaffleEntryCollector directory."
+[ -d "$APP_DEST/.rbenv" ] || fail "/opt/raffle not set up yet — run bin/setup_kiosk first."
+
+cd /tmp
+
+# --- Deploy ---
+
+step "Syncing code to $APP_DEST..."
+sudo rsync -a --delete \
+    --exclude='.git' \
+    --exclude='tmp/' \
+    --exclude='log/' \
+    --exclude='db/*.sqlite3' \
+    --exclude='storage/' \
+    --exclude='node_modules/' \
+    --exclude='.rbenv/' \
+    --exclude='.env' \
+    --exclude='config/master.key' \
+    --exclude='config/credentials.yml.enc' \
+    --exclude='.bundle/' \
+    --exclude='vendor/bundle/' \
+    "$APP_SOURCE/" "$APP_DEST/"
+
+sudo chown -R raffle:raffle "$APP_DEST"
+sudo -u raffle mkdir -p "$APP_DEST/tmp" "$APP_DEST/log" "$APP_DEST/db" "$APP_DEST/storage"
+
+step "Installing gems..."
+sudo -u raffle /bin/bash -c "
+    export PATH='$RAFFLE_PATH'
+    cd '$APP_DEST'
+    bundle config set --local deployment true
+    bundle config set --local without 'development test'
+    bundle install --quiet
+"
+
+step "Running migrations..."
+sudo -u raffle /bin/bash -c "
+    export PATH='$RAFFLE_PATH'
+    cd '$APP_DEST'
+    RAILS_ENV=production bundle exec rails db:migrate
+"
+
+step "Precompiling assets..."
+sudo -u raffle /bin/bash -c "
+    export PATH='$RAFFLE_PATH'
+    cd '$APP_DEST'
+    RAILS_ENV=production bundle exec rails assets:precompile
+"
+
+step "Restarting raffle-kiosk service..."
+sudo systemctl restart raffle-kiosk.service
+
+# Wait briefly and check it started OK
+sleep 2
+if systemctl is-active --quiet raffle-kiosk.service; then
+    echo ""
+    echo -e "${GREEN}Deploy complete — service is running.${NC}"
+else
+    fail "Service failed to start. Check: sudo journalctl -u raffle-kiosk.service -n 30"
+fi
