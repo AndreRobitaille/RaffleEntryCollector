@@ -49,21 +49,46 @@ class Admin::ManagementController < Admin::BaseController
       Entrant.delete_all
     end
 
-    # Delete all submission logs
-    Dir.glob(self.class.submission_log_dir.join("submissions*.jsonl")).each { |f| File.delete(f) }
+    # Delete all submission logs and USB backups (best-effort — DB is already cleared)
+    file_errors = delete_submission_logs + delete_usb_backups
 
-    # Delete USB backup files if mounted
-    usb_mount = UsbBackup.find_usb_mount
-    if usb_mount
-      Dir.glob(File.join(usb_mount, "submissions*.jsonl")).each { |f| File.delete(f) }
-      db_backup = File.join(usb_mount, "raffle.sqlite3")
-      File.delete(db_backup) if File.exist?(db_backup)
+    if file_errors.any?
+      redirect_to admin_management_path, alert: "Database cleared, but some files could not be deleted: #{file_errors.join('; ')}"
+    else
+      redirect_to admin_management_path, notice: "Factory reset complete. All data, logs, and backups deleted."
     end
-
-    redirect_to admin_management_path, notice: "Factory reset complete. All data, logs, and backups deleted."
   end
 
   private
+
+  def delete_submission_logs
+    errors = []
+    Dir.glob(self.class.submission_log_dir.join("submissions*.jsonl")).each do |f|
+      File.delete(f)
+    rescue SystemCallError => e
+      errors << e.message
+    end
+    errors
+  end
+
+  def delete_usb_backups
+    errors = []
+    usb_mount = UsbBackup.find_usb_mount
+    return errors unless usb_mount
+
+    Dir.glob(File.join(usb_mount, "submissions*.jsonl")).each do |f|
+      File.delete(f)
+    rescue SystemCallError => e
+      errors << e.message
+    end
+    db_backup = File.join(usb_mount, "raffle.sqlite3")
+    begin
+      File.delete(db_backup) if File.exist?(db_backup)
+    rescue SystemCallError => e
+      errors << e.message
+    end
+    errors
+  end
 
   def timestamp_submission_log
     log_path = self.class.submission_log_dir.join("submissions.jsonl")
