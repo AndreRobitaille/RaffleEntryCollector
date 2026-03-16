@@ -578,3 +578,214 @@ html { height: 100%; }
 .admin-btn--primary:hover {
   background: #6e9bd8;
 }
+
+/* Winner cards on raffle page */
+.admin-winner-card {
+  background: var(--brand-deep);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  border-left: 4px solid rgba(91, 139, 205, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.admin-winner-card--winner {
+  border-left-color: var(--blue);
+}
+
+.admin-winner-card__label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+  color: rgba(91, 139, 205, 0.7);
+}
+
+.admin-winner-card--winner .admin-winner-card__label {
+  color: var(--blue);
+}
+
+.admin-winner-card__name {
+  color: var(--white);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.admin-winner-card__detail {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* Celebration overlay */
+.admin-celebrate {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  background: linear-gradient(135deg, #1a1835 0%, #26235a 50%, #3b386f 100%);
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.admin-celebrate--visible {
+  display: flex;
+}
+
+.admin-celebrate__accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--blue), var(--accent), var(--blue));
+}
+
+.admin-celebrate__label {
+  color: var(--accent);
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  margin-bottom: 20px;
+}
+
+.admin-celebrate__name {
+  color: var(--white);
+  font-size: 72px;
+  font-weight: 800;
+  line-height: 1.1;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.admin-celebrate__company {
+  color: var(--sky);
+  font-size: 28px;
+  text-align: center;
+}
+
+.admin-celebrate__close {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  border: 1px solid rgba(174, 234, 253, 0.2);
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background var(--transition);
+}
+
+.admin-celebrate__close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Stat context hints */
+.admin-stat__hint {
+  display: block;
+  font-size: 10px;
+  margin-top: 2px;
+}
+
+.admin-stat__hint--ok {
+  color: rgba(166, 218, 116, 0.6);
+}
+
+.admin-stat__hint--warn {
+  color: rgba(255, 183, 77, 0.7);
+}
+
+.admin-stat__hint--info {
+  color: rgba(91, 139, 205, 0.6);
+}
+
+.admin-stat--warn {
+  border-top-color: var(--warning);
+}
+
+.admin-stat__count--warn {
+  color: var(--warning);
+}
+
+/* Stats summary line */
+.admin-stats-summary {
+  font-size: 12px;
+  text-align: center;
+  padding: 4px 0;
+  margin-bottom: 16px;
+}
+
+.admin-stats-summary--ok {
+  color: var(--accent);
+}
+
+.admin-stats-summary--warn {
+  color: var(--warning);
+}
+
+/* Info panel (raffle instructions) */
+.admin-info-panel {
+  background: rgba(91, 139, 205, 0.1);
+  border: 1px solid rgba(91, 139, 205, 0.25);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.admin-info-panel__title {
+  color: var(--blue);
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.admin-info-panel__body {
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Exclusion reason button grid */
+.admin-exclude-reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-exclude-reasons__hint {
+  color: var(--text-muted);
+  font-size: 11px;
+  margin-top: 8px;
+  width: 100%;
+}
+
+/* Export card alignment fix */
+.admin-export__option {
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-export__option-description {
+  flex: 1;
+}
+
+.admin-export__options--three {
+  grid-template-columns: 1fr 1fr 1fr;
+  max-width: 1000px;
+}
+
+/* Disabled button */
+.admin-btn--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
