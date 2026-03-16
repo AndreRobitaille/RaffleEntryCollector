@@ -343,6 +343,144 @@ class Admin::EntriesControllerTest < ActionDispatch::IntegrationTest
     assert_nil session[:admin_entries_search]
   end
 
+  # bulk_exclude tests (Task 5)
+
+  test "PATCH bulk_exclude without auth redirects to login" do
+    patch bulk_exclude_admin_entry_path(entrants(:ada))
+    assert_redirected_to admin_login_path
+  end
+
+  test "PATCH bulk_exclude excludes all eligible entries from same company" do
+    login_as_admin
+    peer = Entrant.create!(
+      first_name: "Charles", last_name: "Babbage", email: "charles@babbage.com",
+      company: "Babbage Inc", job_title: "Inventor", eligibility_confirmed: true
+    )
+    patch bulk_exclude_admin_entry_path(entrants(:ada))
+    assert_redirected_to admin_entries_path(q: "Babbage")
+    entrants(:ada).reload
+    peer.reload
+    assert_equal "excluded_admin", entrants(:ada).eligibility_status
+    assert_equal "Sponsor / Vendor", entrants(:ada).exclusion_reason
+    assert_equal "excluded_admin", peer.eligibility_status
+    assert_equal "Sponsor / Vendor", peer.exclusion_reason
+  end
+
+  test "PATCH bulk_exclude uses case-insensitive company match" do
+    login_as_admin
+    peer = Entrant.create!(
+      first_name: "Lower", last_name: "Case", email: "lower@babbage.com",
+      company: "babbage inc", job_title: "Tester", eligibility_confirmed: true
+    )
+    patch bulk_exclude_admin_entry_path(entrants(:ada))
+    peer.reload
+    assert_equal "excluded_admin", peer.eligibility_status
+  end
+
+  test "PATCH bulk_exclude does not touch winners" do
+    login_as_admin
+    patch bulk_exclude_admin_entry_path(entrants(:winner_carol))
+    entrants(:winner_carol).reload
+    assert_equal "winner", entrants(:winner_carol).eligibility_status
+  end
+
+  test "PATCH bulk_exclude does not touch self_attested_ineligible" do
+    login_as_admin
+    entrants(:ineligible_bob).update_columns(company: "Babbage Inc")
+    patch bulk_exclude_admin_entry_path(entrants(:ada))
+    entrants(:ineligible_bob).reload
+    assert_equal "self_attested_ineligible", entrants(:ineligible_bob).eligibility_status
+  end
+
+  test "PATCH bulk_exclude flash includes count and company name" do
+    login_as_admin
+    patch bulk_exclude_admin_entry_path(entrants(:ada))
+    follow_redirect!
+    assert_select ".admin-flash--notice", text: /1 entry from Babbage Inc excluded/
+  end
+
+  test "PATCH bulk_exclude redirects with first-word company search" do
+    login_as_admin
+    patch bulk_exclude_admin_entry_path(entrants(:ada))
+    assert_redirected_to admin_entries_path(q: "Babbage")
+  end
+
+  # bulk_reinstate tests (Task 6)
+
+  test "PATCH bulk_reinstate without auth redirects to login" do
+    patch bulk_reinstate_admin_entry_path(entrants(:excluded_eve))
+    assert_redirected_to admin_login_path
+  end
+
+  test "PATCH bulk_reinstate reinstates all excluded entries from same company" do
+    login_as_admin
+    patch bulk_reinstate_admin_entry_path(entrants(:excluded_eve))
+    assert_redirected_to admin_entries_path(q: "CypherCon")
+    entrants(:excluded_eve).reload
+    entrants(:sponsor_gina).reload
+    assert_equal "reinstated_admin", entrants(:excluded_eve).eligibility_status
+    assert_nil entrants(:excluded_eve).exclusion_reason
+    assert_equal "reinstated_admin", entrants(:sponsor_gina).eligibility_status
+    assert_nil entrants(:sponsor_gina).exclusion_reason
+  end
+
+  test "PATCH bulk_reinstate uses case-insensitive company match" do
+    login_as_admin
+    peer = Entrant.create!(
+      first_name: "Lower", last_name: "Case", email: "lower@sponsor.com",
+      company: "cyphercon sponsor llc", job_title: "Tester", eligibility_confirmed: true,
+      eligibility_status: "excluded_admin", exclusion_reason: "Sponsor / Vendor"
+    )
+    patch bulk_reinstate_admin_entry_path(entrants(:excluded_eve))
+    peer.reload
+    assert_equal "reinstated_admin", peer.eligibility_status
+  end
+
+  test "PATCH bulk_reinstate flash includes count and company name" do
+    login_as_admin
+    patch bulk_reinstate_admin_entry_path(entrants(:excluded_eve))
+    follow_redirect!
+    assert_select ".admin-flash--notice", text: /2 entries from CypherCon Sponsor LLC reinstated/
+  end
+
+  test "PATCH bulk_reinstate redirects with first-word company search" do
+    login_as_admin
+    patch bulk_reinstate_admin_entry_path(entrants(:excluded_eve))
+    assert_redirected_to admin_entries_path(q: "CypherCon")
+  end
+
+  # Task 7: exclude/reinstate redirect for Sponsor / Vendor
+
+  test "PATCH exclude with Sponsor / Vendor reason redirects to index" do
+    login_as_admin
+    entrant = entrants(:ada)
+    patch exclude_admin_entry_path(entrant), params: { exclusion_reason: "Sponsor / Vendor" }
+    assert_redirected_to admin_entries_path
+  end
+
+  test "PATCH exclude with non-sponsor reason still redirects to show" do
+    login_as_admin
+    entrant = entrants(:ada)
+    patch exclude_admin_entry_path(entrant), params: { exclusion_reason: "Event Staff" }
+    assert_redirected_to admin_entry_path(entrant)
+  end
+
+  test "PATCH reinstate for sponsor-excluded entry redirects to index" do
+    login_as_admin
+    entrant = entrants(:excluded_eve)
+    entrant.update_columns(exclusion_reason: "Sponsor / Vendor")
+    patch reinstate_admin_entry_path(entrant)
+    assert_redirected_to admin_entries_path
+  end
+
+  test "PATCH reinstate for non-sponsor-excluded entry still redirects to show" do
+    login_as_admin
+    entrant = entrants(:excluded_eve)
+    entrant.update_columns(exclusion_reason: "Event Staff")
+    patch reinstate_admin_entry_path(entrant)
+    assert_redirected_to admin_entry_path(entrant)
+  end
+
   # company_matches tests (Task 4)
 
   test "GET company_matches without auth redirects to login" do

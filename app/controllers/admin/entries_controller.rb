@@ -62,7 +62,11 @@ class Admin::EntriesController < Admin::BaseController
       eligibility_status: "excluded_admin",
       exclusion_reason: params[:exclusion_reason].presence
     )
-    redirect_to admin_entry_path(@entrant), notice: "Entry excluded."
+    if params[:exclusion_reason] == "Sponsor / Vendor"
+      redirect_to admin_entries_path, notice: "Entry excluded."
+    else
+      redirect_to admin_entry_path(@entrant), notice: "Entry excluded."
+    end
   end
 
   def reinstate
@@ -71,11 +75,56 @@ class Admin::EntriesController < Admin::BaseController
       redirect_to admin_entry_path(@entrant), alert: "Cannot reinstate from this status."
       return
     end
+    was_sponsor = @entrant.exclusion_reason == "Sponsor / Vendor"
     @entrant.update!(
       eligibility_status: "reinstated_admin",
       exclusion_reason: nil
     )
-    redirect_to admin_entry_path(@entrant), notice: "Entry reinstated."
+    if was_sponsor
+      redirect_to admin_entries_path, notice: "Entry reinstated."
+    else
+      redirect_to admin_entry_path(@entrant), notice: "Entry reinstated."
+    end
+  end
+
+  def bulk_exclude
+    @entrant = Entrant.find(params[:id])
+    company = @entrant.company
+
+    matches = Entrant.where("LOWER(company) = LOWER(?)", company)
+                     .where(eligibility_status: %w[eligible duplicate_review reinstated_admin])
+
+    count = 0
+    ActiveRecord::Base.transaction do
+      count = matches.update_all(
+        eligibility_status: "excluded_admin",
+        exclusion_reason: "Sponsor / Vendor"
+      )
+    end
+
+    search_term = company.split.first
+    flash[:notice] = "#{count} #{count == 1 ? 'entry' : 'entries'} from #{company} excluded. Searching for other entries that may be related."
+    redirect_to admin_entries_path(q: search_term)
+  end
+
+  def bulk_reinstate
+    @entrant = Entrant.find(params[:id])
+    company = @entrant.company
+
+    matches = Entrant.where("LOWER(company) = LOWER(?)", company)
+                     .where(eligibility_status: "excluded_admin")
+
+    count = 0
+    ActiveRecord::Base.transaction do
+      count = matches.update_all(
+        eligibility_status: "reinstated_admin",
+        exclusion_reason: nil
+      )
+    end
+
+    search_term = company.split.first
+    flash[:notice] = "#{count} #{count == 1 ? 'entry' : 'entries'} from #{company} reinstated. Searching for other entries that may still be excluded."
+    redirect_to admin_entries_path(q: search_term)
   end
 
   def company_matches
