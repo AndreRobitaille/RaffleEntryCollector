@@ -2046,7 +2046,7 @@ git commit -m "feat: add admin UI styling"
 
 ---
 
-## Task 15: Kiosk Setup Script
+## Task 15: Kiosk Setup Script ✅ (completed 2026-03-15)
 
 **Files:**
 - Create: `bin/setup_kiosk`
