@@ -130,8 +130,7 @@ if [ -d "$APP_DEST/.rbenv/.git" ]; then
 else
     step "Installing rbenv for raffle user..."
     sudo rm -rf "$APP_DEST/.rbenv"
-    sudo -u raffle /bin/bash -c "
-        cd /tmp
+    sudo -u raffle -D /tmp /bin/bash -c "
         export PATH='$RAFFLE_PATH'
         git clone https://github.com/rbenv/rbenv.git '$APP_DEST/.rbenv'
     "
@@ -142,8 +141,7 @@ if [ -d "$APP_DEST/.rbenv/plugins/ruby-build/.git" ]; then
 else
     step "Installing ruby-build plugin..."
     sudo rm -rf "$APP_DEST/.rbenv/plugins/ruby-build"
-    sudo -u raffle /bin/bash -c "
-        cd /tmp
+    sudo -u raffle -D /tmp /bin/bash -c "
         export PATH='$RAFFLE_PATH'
         mkdir -p '$APP_DEST/.rbenv/plugins'
         git clone https://github.com/rbenv/ruby-build.git '$APP_DEST/.rbenv/plugins/ruby-build'
@@ -151,17 +149,15 @@ else
 fi
 
 RBENV="$APP_DEST/.rbenv/bin/rbenv"
-if ! sudo -u raffle /bin/bash -c "cd '$APP_DEST' && export PATH='$RAFFLE_PATH'; '$RBENV' versions --bare 2>/dev/null | grep -qF '$RUBY_VERSION'"; then
+if ! sudo -u raffle -D /tmp /bin/bash -c "export PATH='$RAFFLE_PATH'; '$RBENV' versions --bare 2>/dev/null | grep -qF '$RUBY_VERSION'"; then
     step "Installing Ruby $RUBY_VERSION (this will take a while on Pi)..."
-    sudo -u raffle /bin/bash -c "
-        cd '$APP_DEST'
+    sudo -u raffle -D /tmp /bin/bash -c "
         export PATH='$RAFFLE_PATH'
         export MAKE_OPTS='-j 2'
         rbenv install '$RUBY_VERSION'
     "
     step "Setting Ruby $RUBY_VERSION as global default..."
-    sudo -u raffle /bin/bash -c "
-        cd '$APP_DEST'
+    sudo -u raffle -D /tmp /bin/bash -c "
         export PATH='$RAFFLE_PATH'
         rbenv global '$RUBY_VERSION'
     "
@@ -186,11 +182,11 @@ sudo rsync -a --delete \
     "$APP_SOURCE/" "$APP_DEST/"
 
 # Ensure writable directories exist
-sudo -u raffle mkdir -p "$APP_DEST/tmp" "$APP_DEST/log" "$APP_DEST/db"
+sudo -u raffle -D /tmp mkdir -p "$APP_DEST/tmp" "$APP_DEST/log" "$APP_DEST/db"
 sudo chown -R raffle:raffle "$APP_DEST"
 
 step "Installing gems..."
-sudo -u raffle /bin/bash -c "
+sudo -u raffle -D /tmp /bin/bash -c "
     export PATH='$RAFFLE_PATH'
     cd '$APP_DEST'
     bundle install --deployment --without development test
@@ -201,7 +197,7 @@ sudo -u raffle /bin/bash -c "
 if [ ! -f "$APP_DEST/.env" ]; then
     step "Generating .env file with auto-generated SECRET_KEY_BASE..."
     SECRET=$(openssl rand -hex 64)
-    sudo -u raffle bash -c "cat > '$APP_DEST/.env'" <<EOF
+    sudo -u raffle -D /tmp bash -c "cat > '$APP_DEST/.env'" <<EOF
 RAILS_ENV=production
 SECRET_KEY_BASE=$SECRET
 ADMIN_PASSWORD=CHANGE_ME
@@ -217,7 +213,7 @@ sudo chown raffle:raffle "$APP_DEST/.env"
 # --- Step 10: Setup database ----------------------------------------
 
 step "Setting up production database..."
-sudo -u raffle /bin/bash -c "
+sudo -u raffle -D /tmp /bin/bash -c "
     export PATH='$RAFFLE_PATH'
     cd '$APP_DEST'
     RAILS_ENV=production bundle exec rails db:create 2>/dev/null || true
@@ -227,7 +223,7 @@ sudo -u raffle /bin/bash -c "
 # --- Step 11: Precompile assets -------------------------------------
 
 step "Precompiling assets..."
-sudo -u raffle /bin/bash -c "
+sudo -u raffle -D /tmp /bin/bash -c "
     export PATH='$RAFFLE_PATH'
     cd '$APP_DEST'
     RAILS_ENV=production bundle exec rails assets:precompile
