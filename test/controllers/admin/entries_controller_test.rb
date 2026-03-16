@@ -250,14 +250,16 @@ class Admin::EntriesControllerTest < ActionDispatch::IntegrationTest
     login_as_admin
     get admin_entry_path(entrants(:ada))
     assert_select ".admin-exclude-reasons"
-    assert_select ".admin-exclude-reasons form", 5
+    assert_select ".admin-exclude-reasons form", 4
+    assert_select ".admin-exclude-reasons button[data-action*='exclusion-modal#open']", 1
   end
 
   test "show displays exclusion reason buttons for duplicate_review entry" do
     login_as_admin
     get admin_entry_path(entrants(:duplicate_alan))
     assert_select ".admin-exclude-reasons"
-    assert_select ".admin-exclude-reasons form", 5
+    assert_select ".admin-exclude-reasons form", 4
+    assert_select ".admin-exclude-reasons button[data-action*='exclusion-modal#open']", 1
   end
 
   test "exclude with preset reason stores correct reason" do
@@ -270,6 +272,36 @@ class Admin::EntriesControllerTest < ActionDispatch::IntegrationTest
     login_as_admin
     get admin_entry_path(entrants(:ada))
     assert_select "input[type=text][name*=exclusion_reason]", 0
+  end
+
+  test "show displays sponsor/vendor button as modal trigger for eligible entry" do
+    login_as_admin
+    get admin_entry_path(entrants(:ada))
+    assert_select "button[data-action*='exclusion-modal#open']", text: "Sponsor / Vendor"
+    assert_select ".admin-exclude-reasons form", 4
+  end
+
+  test "show displays exclusion dialog for eligible entry" do
+    login_as_admin
+    get admin_entry_path(entrants(:ada))
+    assert_select "dialog.admin-exclusion-modal"
+    assert_select "dialog.admin-exclusion-modal form[action*='exclude']"
+    assert_select "dialog.admin-exclusion-modal form[action*='bulk_exclude']"
+  end
+
+  test "show displays reinstate modal for sponsor-excluded entry with company peers" do
+    login_as_admin
+    # sponsor_gina has exclusion_reason "Sponsor / Vendor" and excluded_eve is a peer
+    get admin_entry_path(entrants(:sponsor_gina))
+    assert_select "dialog.admin-reinstate-modal"
+    assert_select "button[data-action*='exclusion-modal#open']", text: "Reinstate"
+  end
+
+  test "show displays regular reinstate button when no company peers excluded" do
+    login_as_admin
+    get admin_entry_path(entrants(:excluded_eve))
+    assert_select "dialog.admin-reinstate-modal", count: 0
+    assert_select ".admin-action--reinstate form"
   end
 
   # Edge case tests

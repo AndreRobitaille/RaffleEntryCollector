@@ -57,48 +57,175 @@
 
   <%# Action area — contextual based on eligibility status %>
   <% case @entrant.eligibility_status %>
-  <% when "eligible", "reinstated_admin" %>
+  <% when "eligible", "reinstated_admin", "duplicate_review" %>
     <div class="admin-action admin-action--exclude">
       <span class="admin-action__title">Exclude This Entry</span>
-      <div class="admin-exclude-reasons">
-        <% %w[Sponsor\ /\ Vendor Event\ Staff Duplicate FFS\ Employee Other].each do |reason| %>
-          <%= button_to reason, exclude_admin_entry_path(@entrant),
-              method: :patch,
-              params: { exclusion_reason: reason },
-              class: "admin-btn admin-btn--danger" %>
-        <% end %>
+      <div data-controller="exclusion-modal"
+           data-exclusion-modal-matches-url-value="<%= company_matches_admin_entry_path(@entrant) %>"
+           data-exclusion-modal-context-value="exclude">
+        <div class="admin-exclude-reasons">
+          <button type="button" class="admin-btn admin-btn--danger"
+                  data-action="exclusion-modal#open">Sponsor / Vendor</button>
+          <% %w[Event\ Staff Duplicate FFS\ Employee Other].each do |reason| %>
+            <%= button_to reason, exclude_admin_entry_path(@entrant),
+                method: :patch,
+                params: { exclusion_reason: reason },
+                class: "admin-btn admin-btn--danger" %>
+          <% end %>
+        </div>
+
+        <%# Exclusion modal dialog %>
+        <dialog class="admin-exclusion-modal"
+                data-exclusion-modal-target="dialog"
+                data-action="click->exclusion-modal#backdropClick">
+          <div class="admin-modal__content">
+            <div class="admin-modal__header">
+              <h3 class="admin-modal__title">Exclude as Sponsor / Vendor</h3>
+              <button type="button" class="admin-modal__close" data-action="exclusion-modal#close">&times;</button>
+            </div>
+            <div class="admin-modal__body">
+              <p class="admin-modal__description">
+                <strong><%= @entrant.first_name %> <%= @entrant.last_name %></strong>
+                is from <strong><%= @entrant.company %></strong>.
+              </p>
+
+              <%= button_to "Exclude #{@entrant.first_name} #{@entrant.last_name}",
+                  exclude_admin_entry_path(@entrant),
+                  method: :patch,
+                  params: { exclusion_reason: "Sponsor / Vendor" },
+                  class: "admin-btn admin-btn--danger admin-modal__primary-btn" %>
+
+              <div class="admin-modal__bulk-section" data-exclusion-modal-target="preview">
+                <div class="admin-modal__divider"><span>or exclude the whole company</span></div>
+
+                <div class="admin-modal__preview">
+                  <div class="admin-modal__preview-title" data-exclusion-modal-target="count"></div>
+                  <ul class="admin-modal__preview-list" data-exclusion-modal-target="list"></ul>
+                  <div class="admin-modal__preview-more" data-exclusion-modal-target="more"></div>
+                </div>
+
+                <div class="admin-modal__confirm-group">
+                  <label class="admin-modal__confirm-label">
+                    Type <strong>all</strong> to enable bulk exclusion
+                  </label>
+                  <div class="admin-modal__confirm-row">
+                    <input type="text" class="admin-modal__confirm-input"
+                           placeholder="all"
+                           autocomplete="off"
+                           data-exclusion-modal-target="confirmInput"
+                           data-action="input->exclusion-modal#validateConfirmation">
+                    <%= button_to "Exclude All",
+                        bulk_exclude_admin_entry_path(@entrant),
+                        method: :patch,
+                        class: "admin-btn admin-btn--danger-outline admin-btn--disabled",
+                        disabled: true,
+                        data: { exclusion_modal_target: "bulkButton" } %>
+                  </div>
+                </div>
+              </div>
+
+              <button type="button" class="admin-btn admin-btn--ghost admin-modal__cancel-btn"
+                      data-action="exclusion-modal#close">Cancel</button>
+            </div>
+          </div>
+        </dialog>
       </div>
     </div>
 
-  <% when "duplicate_review" %>
-    <div class="admin-action admin-action--exclude">
-      <span class="admin-action__title">Exclude This Entry</span>
-      <div class="admin-exclude-reasons">
-        <% %w[Sponsor\ /\ Vendor Event\ Staff Duplicate FFS\ Employee Other].each do |reason| %>
-          <%= button_to reason, exclude_admin_entry_path(@entrant),
-              method: :patch,
-              params: { exclusion_reason: reason },
-              class: "admin-btn admin-btn--danger" %>
-        <% end %>
+    <% if @entrant.eligibility_status == "duplicate_review" %>
+      <div class="admin-action admin-action--reinstate">
+        <div class="admin-action__info">
+          <span class="admin-action__title">Reinstate This Entry</span>
+          <span class="admin-action__description">Clears the duplicate flag and restores to eligible</span>
+        </div>
+        <%= button_to "Reinstate", reinstate_admin_entry_path(@entrant), method: :patch, class: "admin-btn admin-btn--success" %>
       </div>
-    </div>
-
-    <div class="admin-action admin-action--reinstate">
-      <div class="admin-action__info">
-        <span class="admin-action__title">Reinstate This Entry</span>
-        <span class="admin-action__description">Clears the duplicate flag and restores to eligible</span>
-      </div>
-      <%= button_to "Reinstate", reinstate_admin_entry_path(@entrant), method: :patch, class: "admin-btn admin-btn--success" %>
-    </div>
+    <% end %>
 
   <% when "excluded_admin" %>
-    <div class="admin-action admin-action--reinstate">
-      <div class="admin-action__info">
-        <span class="admin-action__title">Reinstate This Entry</span>
-        <span class="admin-action__description">Returns status to eligible and clears exclusion reason</span>
+    <%
+      sponsor_excluded = @entrant.exclusion_reason == "Sponsor / Vendor"
+      company_peer_count = sponsor_excluded ? Entrant.where("LOWER(company) = LOWER(?)", @entrant.company)
+                                                      .where(eligibility_status: "excluded_admin")
+                                                      .where.not(id: @entrant.id)
+                                                      .count : 0
+      show_reinstate_modal = sponsor_excluded && company_peer_count > 0
+    %>
+    <% if show_reinstate_modal %>
+      <div class="admin-action admin-action--reinstate"
+           data-controller="exclusion-modal"
+           data-exclusion-modal-matches-url-value="<%= company_matches_admin_entry_path(@entrant) %>"
+           data-exclusion-modal-context-value="reinstate">
+        <div class="admin-action__info">
+          <span class="admin-action__title">Reinstate This Entry</span>
+          <span class="admin-action__description">Returns status to eligible and clears exclusion reason</span>
+        </div>
+        <button type="button" class="admin-btn admin-btn--success"
+                data-action="exclusion-modal#open">Reinstate</button>
+
+        <dialog class="admin-reinstate-modal"
+                data-exclusion-modal-target="dialog"
+                data-action="click->exclusion-modal#backdropClick">
+          <div class="admin-modal__content">
+            <div class="admin-modal__header">
+              <h3 class="admin-modal__title">Reinstate Entry</h3>
+              <button type="button" class="admin-modal__close" data-action="exclusion-modal#close">&times;</button>
+            </div>
+            <div class="admin-modal__body">
+              <p class="admin-modal__description">
+                <strong><%= @entrant.first_name %> <%= @entrant.last_name %></strong>
+                was excluded as Sponsor / Vendor.
+              </p>
+
+              <%= button_to "Reinstate #{@entrant.first_name} #{@entrant.last_name}",
+                  reinstate_admin_entry_path(@entrant),
+                  method: :patch,
+                  class: "admin-btn admin-btn--success admin-modal__primary-btn" %>
+
+              <div class="admin-modal__bulk-section" data-exclusion-modal-target="preview">
+                <div class="admin-modal__divider"><span>or reinstate the whole company</span></div>
+
+                <div class="admin-modal__preview">
+                  <div class="admin-modal__preview-title" data-exclusion-modal-target="count"></div>
+                  <ul class="admin-modal__preview-list" data-exclusion-modal-target="list"></ul>
+                  <div class="admin-modal__preview-more" data-exclusion-modal-target="more"></div>
+                </div>
+
+                <div class="admin-modal__confirm-group">
+                  <label class="admin-modal__confirm-label">
+                    Type <strong>all</strong> to enable bulk reinstatement
+                  </label>
+                  <div class="admin-modal__confirm-row">
+                    <input type="text" class="admin-modal__confirm-input"
+                           placeholder="all"
+                           autocomplete="off"
+                           data-exclusion-modal-target="confirmInput"
+                           data-action="input->exclusion-modal#validateConfirmation">
+                    <%= button_to "Reinstate All",
+                        bulk_reinstate_admin_entry_path(@entrant),
+                        method: :patch,
+                        class: "admin-btn admin-btn--success-outline admin-btn--disabled",
+                        disabled: true,
+                        data: { exclusion_modal_target: "bulkButton" } %>
+                  </div>
+                </div>
+              </div>
+
+              <button type="button" class="admin-btn admin-btn--ghost admin-modal__cancel-btn"
+                      data-action="exclusion-modal#close">Cancel</button>
+            </div>
+          </div>
+        </dialog>
       </div>
-      <%= button_to "Reinstate", reinstate_admin_entry_path(@entrant), method: :patch, class: "admin-btn admin-btn--success" %>
-    </div>
+    <% else %>
+      <div class="admin-action admin-action--reinstate">
+        <div class="admin-action__info">
+          <span class="admin-action__title">Reinstate This Entry</span>
+          <span class="admin-action__description">Returns status to eligible and clears exclusion reason</span>
+        </div>
+        <%= button_to "Reinstate", reinstate_admin_entry_path(@entrant), method: :patch, class: "admin-btn admin-btn--success" %>
+      </div>
+    <% end %>
 
   <% when "self_attested_ineligible" %>
     <div class="admin-action admin-action--info">
