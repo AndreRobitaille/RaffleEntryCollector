@@ -1,7 +1,7 @@
 class Admin::RaffleController < Admin::BaseController
   def show
     @total_count = Entrant.count
-    @eligible_count = Entrant.eligible.where.not(eligibility_status: %w[winner alternate_winner]).count
+    @eligible_count = Entrant.eligible.count
     @excluded_count = Entrant.where(eligibility_status: %w[excluded_admin duplicate_review]).count
     @draws = RaffleDraw.includes(:winner).order(id: :asc)
     @draw_complete = @draws.exists?(draw_type: "winner")

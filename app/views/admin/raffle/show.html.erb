@@ -26,8 +26,9 @@
       <div class="admin-winner-card__name"><%= winner_draw.winner.first_name %> <%= winner_draw.winner.last_name %></div>
       <div class="admin-winner-card__detail"><%= winner_draw.winner.email %> · <%= winner_draw.winner.company %></div>
     </div>
-    <button class="admin-btn admin-btn--primary" type="button"
-            onclick="showCelebration('<%= j winner_draw.winner.first_name %> <%= j winner_draw.winner.last_name %>', '<%= j winner_draw.winner.company %>')">
+    <button class="admin-btn admin-btn--primary js-announce" type="button"
+            data-name="<%= winner_draw.winner.first_name %> <%= winner_draw.winner.last_name %>"
+            data-company="<%= winner_draw.winner.company %>">
       Announce
     </button>
   </div>
@@ -39,8 +40,9 @@
         <div class="admin-winner-card__name"><%= draw.winner.first_name %> <%= draw.winner.last_name %></div>
         <div class="admin-winner-card__detail"><%= draw.winner.email %> · <%= draw.winner.company %></div>
       </div>
-      <button class="admin-btn admin-btn--primary" type="button"
-              onclick="showCelebration('<%= j draw.winner.first_name %> <%= j draw.winner.last_name %>', '<%= j draw.winner.company %>')">
+      <button class="admin-btn admin-btn--primary js-announce" type="button"
+              data-name="<%= draw.winner.first_name %> <%= draw.winner.last_name %>"
+              data-company="<%= draw.winner.company %>">
         Announce
       </button>
     </div>
@@ -88,7 +90,7 @@
       </tr>
     </thead>
     <tbody>
-      <% @draws.each_with_index do |d, i| %>
+      <% @draws.each do |d| %>
         <tr class="admin-table__row">
           <td class="admin-table__td admin-table__td--date"><%= d.created_at.strftime("%b %d %H:%M") %></td>
           <td class="admin-table__td">
@@ -122,6 +124,12 @@
   function hideCelebration() {
     document.getElementById('celebration-overlay').classList.remove('admin-celebrate--visible');
   }
+
+  document.querySelectorAll('.js-announce').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      showCelebration(this.dataset.name, this.dataset.company);
+    });
+  });
 
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') hideCelebration();
