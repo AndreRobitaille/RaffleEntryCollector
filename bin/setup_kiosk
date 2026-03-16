@@ -187,6 +187,14 @@ sudo rsync -a --delete \
     --exclude='vendor/bundle/' \
     "$APP_SOURCE/" "$APP_DEST/"
 
+# Remove dev credentials if no matching master key exists (rsync may have
+# deployed credentials.yml.enc from the dev machine, which can't be decrypted
+# by the production master key and causes AEAD errors in Rails).
+if [ ! -f "$APP_DEST/config/master.key" ] && [ -f "$APP_DEST/config/credentials.yml.enc" ]; then
+    step "Removing stale credentials.yml.enc (no matching master.key)..."
+    sudo rm -f "$APP_DEST/config/credentials.yml.enc"
+fi
+
 # Fix ownership after root rsync, then create writable directories
 sudo chown -R raffle:raffle "$APP_DEST"
 sudo -u raffle mkdir -p "$APP_DEST/tmp" "$APP_DEST/log" "$APP_DEST/db"
