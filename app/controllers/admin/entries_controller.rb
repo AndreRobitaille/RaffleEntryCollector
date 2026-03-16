@@ -77,4 +77,26 @@ class Admin::EntriesController < Admin::BaseController
     )
     redirect_to admin_entry_path(@entrant), notice: "Entry reinstated."
   end
+
+  def company_matches
+    @entrant = Entrant.find(params[:id])
+    company = @entrant.company
+
+    matches = case params[:context]
+    when "reinstate"
+      Entrant.where("LOWER(company) = LOWER(?)", company)
+             .where(eligibility_status: "excluded_admin")
+    else
+      Entrant.where("LOWER(company) = LOWER(?)", company)
+             .where(eligibility_status: %w[eligible duplicate_review reinstated_admin])
+    end
+
+    render json: {
+      company: company,
+      count: matches.count,
+      entries: matches.limit(3).map { |e|
+        { id: e.id, first_name: e.first_name, last_name: e.last_name, email: e.email }
+      }
+    }
+  end
 end

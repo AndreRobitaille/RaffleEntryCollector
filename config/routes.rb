@@ -15,6 +15,7 @@ Rails.application.routes.draw do
       member do
         patch :exclude
         patch :reinstate
+        get :company_matches
       end
     end
 

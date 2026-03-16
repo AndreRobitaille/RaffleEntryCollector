@@ -342,4 +342,72 @@ class Admin::EntriesControllerTest < ActionDispatch::IntegrationTest
     get admin_entries_path, params: { q: "" }
     assert_nil session[:admin_entries_search]
   end
+
+  # company_matches tests (Task 4)
+
+  test "GET company_matches without auth redirects to login" do
+    get company_matches_admin_entry_path(entrants(:ada))
+    assert_redirected_to admin_login_path
+  end
+
+  test "GET company_matches for exclude context returns eligible entries from same company" do
+    login_as_admin
+    peer = Entrant.create!(
+      first_name: "Charles", last_name: "Babbage", email: "charles@babbage.com",
+      company: "Babbage Inc", job_title: "Inventor", eligibility_confirmed: true
+    )
+    get company_matches_admin_entry_path(entrants(:ada)), params: { context: "exclude" }
+    assert_response :success
+    json = JSON.parse(response.body)
+    assert_equal "Babbage Inc", json["company"]
+    assert_equal 2, json["count"]
+    assert json["entries"].any? { |e| e["first_name"] == "Ada" }
+    assert json["entries"].any? { |e| e["first_name"] == "Charles" }
+  end
+
+  test "GET company_matches for exclude context excludes already-excluded entries" do
+    login_as_admin
+    # excluded_eve is excluded_admin — should not appear in exclude context
+    # sponsor_frank is eligible (same company), sponsor_gina is excluded_admin
+    get company_matches_admin_entry_path(entrants(:excluded_eve)), params: { context: "exclude" }
+    assert_response :success
+    json = JSON.parse(response.body)
+    assert_equal 1, json["count"]  # only sponsor_frank (eligible)
+    assert json["entries"].any? { |e| e["first_name"] == "Frank" }
+  end
+
+  test "GET company_matches for reinstate context returns excluded entries from same company" do
+    login_as_admin
+    # excluded_eve and sponsor_gina are both excluded_admin from CypherCon Sponsor LLC
+    get company_matches_admin_entry_path(entrants(:excluded_eve)), params: { context: "reinstate" }
+    assert_response :success
+    json = JSON.parse(response.body)
+    assert_equal "CypherCon Sponsor LLC", json["company"]
+    assert_equal 2, json["count"]  # excluded_eve + sponsor_gina
+  end
+
+  test "GET company_matches uses case-insensitive company matching" do
+    login_as_admin
+    Entrant.create!(
+      first_name: "Lower", last_name: "Case", email: "lower@babbage.com",
+      company: "babbage inc", job_title: "Tester", eligibility_confirmed: true
+    )
+    get company_matches_admin_entry_path(entrants(:ada)), params: { context: "exclude" }
+    json = JSON.parse(response.body)
+    assert_equal 2, json["count"]  # ada + the lowercase entry
+  end
+
+  test "GET company_matches limits entries array to 3" do
+    login_as_admin
+    4.times do |i|
+      Entrant.create!(
+        first_name: "Person#{i}", last_name: "Test", email: "p#{i}@babbage.com",
+        company: "Babbage Inc", job_title: "Tester", eligibility_confirmed: true
+      )
+    end
+    get company_matches_admin_entry_path(entrants(:ada)), params: { context: "exclude" }
+    json = JSON.parse(response.body)
+    assert_equal 5, json["count"]  # ada + 4 new
+    assert_equal 3, json["entries"].length
+  end
 end
