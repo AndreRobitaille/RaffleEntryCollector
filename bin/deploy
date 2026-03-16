@@ -75,8 +75,10 @@ sudo systemctl restart raffle-kiosk.service
 # Wait briefly and check it started OK
 sleep 2
 if systemctl is-active --quiet raffle-kiosk.service; then
+    step "Refreshing kiosk browser..."
+    sudo -u kiosk pkill -f chromium 2>/dev/null || true
     echo ""
-    echo -e "${GREEN}Deploy complete — service is running.${NC}"
+    echo -e "${GREEN}Deploy complete — service is running, browser restarting.${NC}"
 else
     fail "Service failed to start. Check: sudo journalctl -u raffle-kiosk.service -n 30"
 fi
