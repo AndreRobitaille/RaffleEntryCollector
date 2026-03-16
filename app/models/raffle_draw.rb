@@ -1,5 +1,8 @@
 class RaffleDraw < ApplicationRecord
   class NoEligibleEntrants < StandardError; end
+  class InsufficientEntrants < StandardError; end
+
+  MINIMUM_ELIGIBLE = 3
 
   belongs_to :winner, class_name: "Entrant"
 

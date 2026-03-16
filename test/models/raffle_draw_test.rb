@@ -76,6 +76,19 @@ class RaffleDrawTest < ActiveSupport::TestCase
     assert_includes draw.errors[:draw_type], "is not included in the list"
   end
 
+  test "perform_full_draw! raises InsufficientEntrants with fewer than 3 eligible" do
+    # Setup creates 3 eligible (User0, User1, User2). Exclude one to leave only 2.
+    Entrant.eligible.first.update!(eligibility_status: "excluded_admin")
+
+    assert_raises(RaffleDraw::InsufficientEntrants) do
+      RaffleDraw.perform_full_draw!
+    end
+  end
+
+  test "MINIMUM_ELIGIBLE is 3" do
+    assert_equal 3, RaffleDraw::MINIMUM_ELIGIBLE
+  end
+
   test "rejects nil eligible_count" do
     entrant = Entrant.create!(first_name: "A", last_name: "A", email: "a@x.com",
                               company: "X", job_title: "X", eligibility_confirmed: true)
