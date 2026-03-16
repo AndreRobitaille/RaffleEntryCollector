@@ -116,6 +116,9 @@ html, .admin-body {
   flex: 1;
   overflow-y: auto;
   padding: 24px;
+}
+
+.admin-main > *:not(.admin-login) {
   max-width: 1200px;
 }
 

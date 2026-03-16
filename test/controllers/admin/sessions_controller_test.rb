@@ -29,7 +29,7 @@ class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
   test "DELETE /admin/logout clears session" do
     post admin_login_path, params: { password: Admin::Authentication::DEV_PASSWORD }
     delete admin_logout_path
-    assert_redirected_to admin_login_path
+    assert_redirected_to root_path
 
     get admin_root_path
     assert_redirected_to admin_login_path
@@ -38,7 +38,7 @@ class Admin::SessionsControllerTest < ActionDispatch::IntegrationTest
   test "DELETE /admin/logout works even if admin password were misconfigured" do
     login_as_admin
     delete admin_logout_path
-    assert_redirected_to admin_login_path
+    assert_redirected_to root_path
   end
 
   test "POST /admin/login in production with missing password renders 403" do
