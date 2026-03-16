@@ -143,7 +143,7 @@ Form behavior:
 -   Large tap targets
 -   Clear spacing
 
-Footer button:
+Header button (upper-right):
 
     Rules & Drawing Info
 

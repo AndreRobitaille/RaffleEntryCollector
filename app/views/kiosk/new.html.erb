@@ -1,7 +1,33 @@
 <div class="screen-form" data-controller="idle-timeout" data-idle-timeout-redirect-url-value="<%= root_path %>" data-idle-timeout-seconds-value="90">
-  <div class="screen-form__header">
+  <div class="screen-form__header" data-controller="modal">
     <%= image_tag "FF-Sec_RGB_Logo_darkmode.png", alt: "Final Frontier Security", class: "screen-form__logo" %>
     <h1 class="screen-form__title">Raffle Entry</h1>
+    <button type="button" class="btn btn--secondary btn--small" data-action="modal#open">Rules & Drawing Info</button>
+
+    <dialog id="rules-dialog" class="rules-dialog" data-modal-target="dialog" data-action="click->modal#backdropClick">
+      <div class="rules-dialog__content">
+        <div class="rules-dialog__header">
+          <span class="rules-dialog__title">Rules & Drawing Info</span>
+          <button type="button" class="rules-dialog__close" data-action="modal#close" aria-label="Close">&times;</button>
+        </div>
+
+        <h3>Raffle Rules</h3>
+        <ul>
+          <li>One entry per person</li>
+          <li>Entrants must provide accurate contact information</li>
+          <li>Employees of CypherCon and CypherCon sponsors are not eligible</li>
+          <li>Winner does not need to be present</li>
+          <li>Prize will be shipped after the event if necessary</li>
+          <li>Winner must respond within 2 business days of notification</li>
+          <li>Fraudulent or duplicate entries may be disqualified</li>
+          <li>Void where prohibited by law</li>
+        </ul>
+
+        <h3>Winner Selection</h3>
+        <p>After CypherCon, Final Frontier Security will perform the drawing from the pool of eligible entries.</p>
+        <p>The winner will be selected using the operating system's <strong>cryptographically secure random number generator</strong>, ensuring the selection is unbiased and unpredictable.</p>
+      </div>
+    </dialog>
   </div>
 
   <%= form_with(model: @entrant, url: enter_path, html: { class: "screen-form__content", data: { controller: "eligibility" } }) do |f| %>
@@ -20,43 +46,53 @@
 
       <div class="form-grid">
         <div class="form-field <%= 'form-field--error' if @entrant.errors[:first_name].any? %>">
-          <%= f.label :first_name %>
+          <div class="form-field__label-row">
+            <%= f.label :first_name %>
+            <% if @entrant.errors[:first_name].any? %>
+              <span class="form-field__error">— <%= @entrant.errors[:first_name].first %></span>
+            <% end %>
+          </div>
           <%= f.text_field :first_name, autocomplete: "nope", data: { eligibility_target: "field" } %>
-          <% if @entrant.errors[:first_name].any? %>
-            <span class="form-field__error"><%= @entrant.errors[:first_name].first %></span>
-          <% end %>
         </div>
 
         <div class="form-field <%= 'form-field--error' if @entrant.errors[:last_name].any? %>">
-          <%= f.label :last_name %>
+          <div class="form-field__label-row">
+            <%= f.label :last_name %>
+            <% if @entrant.errors[:last_name].any? %>
+              <span class="form-field__error">— <%= @entrant.errors[:last_name].first %></span>
+            <% end %>
+          </div>
           <%= f.text_field :last_name, autocomplete: "nope", data: { eligibility_target: "field" } %>
-          <% if @entrant.errors[:last_name].any? %>
-            <span class="form-field__error"><%= @entrant.errors[:last_name].first %></span>
-          <% end %>
         </div>
 
         <div class="form-field <%= 'form-field--error' if @entrant.errors[:email].any? %>">
-          <%= f.label :email, "Work Email" %>
+          <div class="form-field__label-row">
+            <%= f.label :email, "Work Email" %>
+            <% if @entrant.errors[:email].any? %>
+              <span class="form-field__error">— <%= @entrant.errors[:email].first %></span>
+            <% end %>
+          </div>
           <%= f.email_field :email, autocomplete: "nope", data: { eligibility_target: "field" } %>
-          <% if @entrant.errors[:email].any? %>
-            <span class="form-field__error"><%= @entrant.errors[:email].first %></span>
-          <% end %>
         </div>
 
         <div class="form-field <%= 'form-field--error' if @entrant.errors[:company].any? %>">
-          <%= f.label :company, "Company (or School / Independent)" %>
+          <div class="form-field__label-row">
+            <%= f.label :company, "Company (or School / Independent)" %>
+            <% if @entrant.errors[:company].any? %>
+              <span class="form-field__error">— <%= @entrant.errors[:company].first %></span>
+            <% end %>
+          </div>
           <%= f.text_field :company, autocomplete: "nope", data: { eligibility_target: "field" } %>
-          <% if @entrant.errors[:company].any? %>
-            <span class="form-field__error"><%= @entrant.errors[:company].first %></span>
-          <% end %>
         </div>
 
         <div class="form-field <%= 'form-field--error' if @entrant.errors[:job_title].any? %>">
-          <%= f.label :job_title, "Job Title (or Student / Researcher / etc.)" %>
+          <div class="form-field__label-row">
+            <%= f.label :job_title, "Job Title (or Student / Researcher / etc.)" %>
+            <% if @entrant.errors[:job_title].any? %>
+              <span class="form-field__error">— <%= @entrant.errors[:job_title].first %></span>
+            <% end %>
+          </div>
           <%= f.text_field :job_title, autocomplete: "nope", data: { eligibility_target: "field" } %>
-          <% if @entrant.errors[:job_title].any? %>
-            <span class="form-field__error"><%= @entrant.errors[:job_title].first %></span>
-          <% end %>
         </div>
       </div>
 
@@ -74,34 +110,8 @@
     </div>
 
     <div class="screen-form__footer">
-      <div class="form-actions" data-controller="modal">
-        <button type="button" class="btn btn--secondary" data-action="modal#open">Rules & Drawing Info</button>
+      <div class="form-actions">
         <%= f.submit "Submit Entry", class: "btn btn--primary", data: { eligibility_target: "submit" } %>
-
-        <dialog id="rules-dialog" class="rules-dialog" data-modal-target="dialog" data-action="click->modal#backdropClick">
-          <div class="rules-dialog__content">
-            <div class="rules-dialog__header">
-              <span class="rules-dialog__title">Rules & Drawing Info</span>
-              <button type="button" class="rules-dialog__close" data-action="modal#close" aria-label="Close">&times;</button>
-            </div>
-
-            <h3>Raffle Rules</h3>
-            <ul>
-              <li>One entry per person</li>
-              <li>Entrants must provide accurate contact information</li>
-              <li>Employees of CypherCon and CypherCon sponsors are not eligible</li>
-              <li>Winner does not need to be present</li>
-              <li>Prize will be shipped after the event if necessary</li>
-              <li>Winner must respond within 2 business days of notification</li>
-              <li>Fraudulent or duplicate entries may be disqualified</li>
-              <li>Void where prohibited by law</li>
-            </ul>
-
-            <h3>Winner Selection</h3>
-            <p>After CypherCon, Final Frontier Security will perform the drawing from the pool of eligible entries.</p>
-            <p>The winner will be selected using the operating system's <strong>cryptographically secure random number generator</strong>, ensuring the selection is unbiased and unpredictable.</p>
-          </div>
-        </dialog>
       </div>
     </div>
   <% end %>

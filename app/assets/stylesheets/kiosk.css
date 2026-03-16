@@ -291,6 +291,12 @@ select {
   border-color: var(--sky);
 }
 
+.btn--small {
+  min-height: 40px;
+  padding: 8px 20px;
+  font-size: 14px;
+}
+
 .btn--large {
   min-height: 64px;
   padding: 18px 56px;
@@ -316,6 +322,10 @@ select {
   gap: 16px;
   margin-bottom: 28px;
   flex-shrink: 0;
+}
+
+.screen-form__header .btn {
+  margin-left: auto;
 }
 
 .screen-form__logo {
@@ -355,7 +365,7 @@ select {
 .form-field__error {
   color: var(--error);
   font-size: 13px;
-  margin-top: 2px;
+  white-space: nowrap;
 }
 
 .eligibility-gate--error {
@@ -407,6 +417,12 @@ select {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.form-field__label-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
 }
 
 .form-field label {
@@ -486,7 +502,7 @@ select {
 .form-actions {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   margin-top: 16px;
   gap: 16px;
 }
