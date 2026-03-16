@@ -10,3 +10,7 @@
   <%= link_to "Start New Entry", root_path, class: "btn btn--primary btn--large" %>
   <%= image_tag "FF-Sec_RGB_Logo_darkmode.png", alt: "Final Frontier Security", class: "screen-success__logo" %>
 </div>
+
+<div class="admin-access-target" data-controller="admin-access" data-admin-access-url-value="<%= admin_login_path %>" data-action="click->admin-access#tap">
+  <span class="admin-access-target__dot"></span>
+</div>

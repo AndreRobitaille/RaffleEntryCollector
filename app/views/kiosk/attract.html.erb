@@ -9,3 +9,7 @@
     <%= link_to "Enter the Raffle", enter_path, class: "btn btn--primary btn--large" %>
   </div>
 </div>
+
+<div class="admin-access-target" data-controller="admin-access" data-admin-access-url-value="<%= admin_login_path %>" data-action="click->admin-access#tap">
+  <span class="admin-access-target__dot"></span>
+</div>

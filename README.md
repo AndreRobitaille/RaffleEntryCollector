@@ -57,7 +57,7 @@ admin_password: your-secure-password-here
 
 Save and exit. This encrypts the password into `config/credentials.yml.enc` (committed to the repo) using `config/master.key` (not committed — keep it safe).
 
-In development, the admin console falls back to a default dev password if credentials are not configured.
+In development, the admin console falls back to `dev-password` if credentials are not configured.
 
 ### 5. Boot the server
 
@@ -72,6 +72,15 @@ bin/rails test
 bundle exec rubocop
 bundle exec brakeman --no-pager -q
 ```
+
+### Accessing the Admin Console
+
+The admin console lives at `/admin`. From the kiosk screens, there are two hidden ways to reach it:
+
+- **Tap target** — tap the small dot in the bottom-right corner of any kiosk screen 5 times in quick succession (within 1.5 seconds).
+- **Keyboard shortcut** — press `Ctrl+Shift+A` on any kiosk screen.
+
+Both methods navigate to the admin login page. In development, the password is `dev-password`. In production, it uses the password set in Rails encrypted credentials (see step 4 above).
 
 ## Kiosk Deployment (Raspberry Pi)
 

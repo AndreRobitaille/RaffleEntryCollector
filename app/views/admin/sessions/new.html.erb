@@ -1,13 +1,28 @@
-<h1>Admin Login</h1>
+<div class="admin-login">
+  <div class="admin-login__card <%= 'admin-login__card--error' if flash[:alert] %>">
+    <%= image_tag "FF-Sec_RGB_Logo_darkmode.png", alt: "Final Frontier Security", class: "admin-login__logo" %>
 
-<% if flash[:alert] %>
-  <p class="alert"><%= flash[:alert] %></p>
-<% end %>
+    <div class="admin-login__divider"></div>
 
-<%= form_with(url: admin_login_path, method: :post) do |f| %>
-  <div>
-    <%= f.label :password %>
-    <%= f.password_field :password, autofocus: true, autocomplete: "off" %>
+    <span class="admin-login__label">Console Access</span>
+
+    <% if flash[:alert] %>
+      <div class="admin-login__alert"><%= flash[:alert] %></div>
+    <% end %>
+
+    <%= form_with(url: admin_login_path, method: :post, class: "admin-login__form") do |f| %>
+      <div class="admin-login__field">
+        <%= f.password_field :password,
+            autofocus: true,
+            autocomplete: "off",
+            placeholder: "Enter access code",
+            class: "admin-login__input" %>
+      </div>
+      <%= f.submit "Authenticate", class: "admin-login__submit" %>
+    <% end %>
+
+    <div class="admin-login__footer">
+      <%= link_to "← Return to kiosk", root_path, class: "admin-login__back" %>
+    </div>
   </div>
-  <%= f.submit "Log In" %>
-<% end %>
+</div>
