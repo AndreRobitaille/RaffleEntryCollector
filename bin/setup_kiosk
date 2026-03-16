@@ -181,6 +181,8 @@ sudo rsync -a --delete \
     --exclude='node_modules/' \
     --exclude='.rbenv/' \
     --exclude='.env' \
+    --exclude='config/master.key' \
+    --exclude='config/credentials.yml.enc' \
     --exclude='.bundle/' \
     --exclude='vendor/bundle/' \
     "$APP_SOURCE/" "$APP_DEST/"
@@ -252,7 +254,9 @@ if [ ! -f "$APP_DEST/config/master.key" ]; then
     sudo chown raffle:raffle "$PW_TMPFILE"
     unset ADMIN_PW ADMIN_PW_CONFIRM
 
-    # Generate master key directly into the target file
+    # Remove stale credentials.yml.enc (deployed by rsync from dev machine,
+    # encrypted with a different master key) and generate a fresh key pair.
+    sudo rm -f "$APP_DEST/config/credentials.yml.enc"
     openssl rand -hex 16 | sudo -u raffle tee "$APP_DEST/config/master.key" >/dev/null
     sudo chmod 600 "$APP_DEST/config/master.key"
 
