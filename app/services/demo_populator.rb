@@ -61,34 +61,79 @@ class DemoPopulator
 
   INTEREST_AREAS = Entrant::INTEREST_AREA_OPTIONS
 
+  SPONSOR_COMPANIES = [
+    "CypherCon Events LLC",
+    "Badger State Brewing Co",
+    "MKE Tech Solutions"
+  ].freeze
+
+  INDIVIDUAL_EXCLUSIONS = [
+    { reason: "Requested removal from raffle" },
+    { reason: "Not conference attendee" },
+    { reason: "Duplicate badge scan — same person, different email" }
+  ].freeze
+
   def self.populate!
     raise DatabaseNotEmpty, "Cannot populate: entrants already exist" if Entrant.exists?
 
     now = Time.current
-    records = 300.times.map do |_i|
-      first = FIRST_NAMES.sample
-      last = LAST_NAMES.sample
-      company = COMPANIES.sample
-      email_domain = company.downcase.gsub(/[^a-z0-9]/, "") + ".com"
-      email = "#{first.downcase}.#{last.downcase}@#{email_domain}"
+    records = []
 
-      # Spread created_at across last 2 days (simulating conference entries)
-      created = now - rand(0..172_800)
+    # Generate ~280 normal eligible entrants
+    280.times { records << build_entrant(now: now) }
 
-      {
-        first_name: first,
-        last_name: last,
-        email: email,
-        company: company,
-        job_title: JOB_TITLES.sample,
-        interest_areas: INTEREST_AREAS.sample(rand(1..4)),
-        eligibility_confirmed: true,
-        eligibility_status: "eligible",
-        created_at: created,
-        updated_at: created
-      }
+    # ~8 duplicates: resubmissions of existing entrants (same email)
+    8.times do
+      original = records.sample
+      dup = original.dup
+      dup[:created_at] = original[:created_at] + rand(60..3600)
+      dup[:updated_at] = dup[:created_at]
+      dup[:eligibility_status] = "duplicate_review"
+      records << dup
+    end
+
+    # 3 individual exclusions from random companies
+    INDIVIDUAL_EXCLUSIONS.each do |excl|
+      record = build_entrant(now: now)
+      record[:eligibility_status] = "excluded_admin"
+      record[:exclusion_reason] = excl[:reason]
+      records << record
+    end
+
+    # Sponsor/vendor companies: 3 entrants each, all excluded
+    SPONSOR_COMPANIES.each do |company|
+      3.times do
+        record = build_entrant(now: now, company: company)
+        record[:eligibility_status] = "excluded_admin"
+        record[:exclusion_reason] = "CypherCon sponsor employee"
+        records << record
+      end
     end
 
     Entrant.insert_all(records)
   end
+
+  def self.build_entrant(now:, company: nil)
+    first = FIRST_NAMES.sample
+    last = LAST_NAMES.sample
+    company ||= COMPANIES.sample
+    email_domain = company.downcase.gsub(/[^a-z0-9]/, "") + ".com"
+    email = "#{first.downcase}.#{last.downcase}@#{email_domain}"
+    created = now - rand(0..172_800)
+
+    {
+      first_name: first,
+      last_name: last,
+      email: email,
+      company: company,
+      job_title: JOB_TITLES.sample,
+      interest_areas: INTEREST_AREAS.sample(rand(1..4)),
+      eligibility_confirmed: true,
+      eligibility_status: "eligible",
+      exclusion_reason: nil,
+      created_at: created,
+      updated_at: created
+    }
+  end
+  private_class_method :build_entrant
 end
