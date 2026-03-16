@@ -1,5 +1,6 @@
 class Admin::SessionsController < ApplicationController
   include Admin::Authentication
+  layout "admin"
 
   skip_before_action :check_admin_password_configured, only: [ :destroy ]
 
