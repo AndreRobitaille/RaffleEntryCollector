@@ -50,6 +50,13 @@ class Admin::EntriesController < Admin::BaseController
 
   def show
     @entrant = Entrant.find(params[:id])
+
+    if @entrant.eligibility_status == "excluded_admin" && @entrant.exclusion_reason == "Sponsor / Vendor"
+      @show_reinstate_modal = Entrant.where("LOWER(company) = LOWER(?)", @entrant.company)
+                                     .where(eligibility_status: "excluded_admin")
+                                     .where.not(id: @entrant.id)
+                                     .exists?
+    end
   end
 
   def exclude

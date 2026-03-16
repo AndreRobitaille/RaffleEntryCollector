@@ -143,15 +143,7 @@
     <% end %>
 
   <% when "excluded_admin" %>
-    <%
-      sponsor_excluded = @entrant.exclusion_reason == "Sponsor / Vendor"
-      company_peer_count = sponsor_excluded ? Entrant.where("LOWER(company) = LOWER(?)", @entrant.company)
-                                                      .where(eligibility_status: "excluded_admin")
-                                                      .where.not(id: @entrant.id)
-                                                      .count : 0
-      show_reinstate_modal = sponsor_excluded && company_peer_count > 0
-    %>
-    <% if show_reinstate_modal %>
+    <% if @show_reinstate_modal %>
       <div class="admin-action admin-action--reinstate"
            data-controller="exclusion-modal"
            data-exclusion-modal-matches-url-value="<%= company_matches_admin_entry_path(@entrant) %>"
