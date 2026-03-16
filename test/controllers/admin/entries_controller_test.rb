@@ -295,4 +295,51 @@ class Admin::EntriesControllerTest < ActionDispatch::IntegrationTest
     # No error, no unescaped HTML in response
     refute_includes response.body, "<script>"
   end
+
+  # Session persistence tests (Task 2)
+
+  test "index stores search query in session" do
+    login_as_admin
+    get admin_entries_path, params: { q: "Ada" }
+    assert_equal "Ada", session[:admin_entries_search]
+  end
+
+  test "index stores sort params in session" do
+    login_as_admin
+    get admin_entries_path, params: { sort: "last_name", dir: "desc" }
+    assert_equal "last_name", session[:admin_entries_sort]
+    assert_equal "desc", session[:admin_entries_direction]
+  end
+
+  test "index restores search from session when no params given" do
+    login_as_admin
+    get admin_entries_path, params: { q: "Ada" }
+    get admin_entries_path
+    assert_select "table tr td", text: "Ada"
+    assert_select "table tr td", text: "Grace", count: 0
+  end
+
+  test "index restores sort from session when no params given" do
+    login_as_admin
+    get admin_entries_path, params: { sort: "last_name", dir: "desc" }
+    get admin_entries_path
+    rows = css_select("table tbody tr td:nth-child(3)")
+    last_names = rows.map(&:text).map(&:strip)
+    assert_equal last_names, last_names.sort.reverse
+  end
+
+  test "index explicit params override session state" do
+    login_as_admin
+    get admin_entries_path, params: { q: "Ada" }
+    get admin_entries_path, params: { q: "Grace" }
+    assert_select "table tr td", text: "Grace"
+    assert_select "table tr td", text: "Ada", count: 0
+  end
+
+  test "index clears session search when visiting with empty search" do
+    login_as_admin
+    get admin_entries_path, params: { q: "Ada" }
+    get admin_entries_path, params: { q: "" }
+    assert_nil session[:admin_entries_search]
+  end
 end

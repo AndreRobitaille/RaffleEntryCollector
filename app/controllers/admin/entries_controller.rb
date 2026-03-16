@@ -3,6 +3,18 @@ class Admin::EntriesController < Admin::BaseController
   SORTABLE_COLUMNS = %w[first_name last_name company eligibility_status email created_at].freeze
 
   def index
+    # Restore from session if no explicit params
+    if params[:q].nil? && params[:sort].nil? && params[:dir].nil?
+      params[:q] = session[:admin_entries_search] if session[:admin_entries_search].present?
+      params[:sort] = session[:admin_entries_sort] if session[:admin_entries_sort].present?
+      params[:dir] = session[:admin_entries_direction] if session[:admin_entries_direction].present?
+    end
+
+    # Store current state in session
+    session[:admin_entries_search] = params[:q].presence
+    session[:admin_entries_sort] = params[:sort].presence
+    session[:admin_entries_direction] = params[:dir].presence
+
     @entrants = Entrant.all
 
     if params[:q].present?
