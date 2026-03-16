@@ -259,12 +259,11 @@ if [ ! -f "$APP_DEST/config/master.key" ] || [ ! -f "$APP_DEST/config/credential
         break
     done
 
-    # Write password to a temp file (raffle-owned, 600 perms) so it never
-    # appears in process arguments or shell history. Shred it when done.
+    # Write password to a temp file readable by raffle. Keep andre as owner
+    # so we can delete it afterwards (/tmp has the sticky bit).
     PW_TMPFILE=$(mktemp /tmp/raffle-pw.XXXXXX)
-    chmod 600 "$PW_TMPFILE"
     printf '%s' "$ADMIN_PW" > "$PW_TMPFILE"
-    sudo chown raffle:raffle "$PW_TMPFILE"
+    chmod 644 "$PW_TMPFILE"
     unset ADMIN_PW ADMIN_PW_CONFIRM
 
     # Generate a fresh master key
