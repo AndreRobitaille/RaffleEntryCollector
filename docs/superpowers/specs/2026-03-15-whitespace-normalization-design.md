@@ -15,9 +15,9 @@ Add `before_validation :normalize_text_fields` that:
 3. **Skips nil values** — guards with `&.squish` to avoid `NoMethodError` on blank fields (presence validation handles the error).
 4. **Leaves `interest_areas` alone** — JSON array, not free-text.
 
-### No changes to `DuplicateDetector`
+### No changes to `DuplicateDetector` or `SubmissionLogger`
 
-Already uses `LOWER()` comparisons. With normalized data stored, those comparisons become more reliable, not less.
+`DuplicateDetector` already uses `LOWER()` comparisons. With normalized data stored, those comparisons become more reliable. `SubmissionLogger` reads from entrant attributes after save, so it automatically gets normalized values.
 
 ### Implementation
 
@@ -42,4 +42,5 @@ end
 - Internal double-spaces are collapsed
 - Email is downcased
 - Duplicate detection catches entries that differ only by whitespace/case
+- Flip existing `DuplicateDetector` whitespace test (marked with "When Issue #23 is resolved" comment) to assert correct behavior
 - Nil fields don't raise errors
