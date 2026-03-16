@@ -208,25 +208,28 @@ sudo -u raffle /bin/bash -c "
     bundle install
 "
 
-# --- Step 9: Generate .env file -------------------------------------
+# --- Step 9: Set up Rails credentials ---------------------------------
+#
+# Rails credentials store both secret_key_base and admin_password in an
+# encrypted file (config/credentials.yml.enc) decrypted by config/master.key.
+# The .env file provides RAILS_ENV only; systemd also loads it.
+#
+# We avoid putting secrets in .env because:
+# - Rails credentials are encrypted at rest
+# - .env is plaintext and only loaded by systemd, not by direct rails commands
 
 if [ ! -f "$APP_DEST/.env" ]; then
-    step "Generating .env file with auto-generated SECRET_KEY_BASE..."
-    SECRET=$(openssl rand -hex 64)
-    sudo -u raffle bash -c "cat > '$APP_DEST/.env'" <<EOF
+    step "Generating .env file..."
+    sudo -u raffle bash -c "cat > '$APP_DEST/.env'" <<'EOF'
 RAILS_ENV=production
-SECRET_KEY_BASE=$SECRET
 EOF
 else
-    step ".env already exists, skipping (won't overwrite your secrets)."
+    step ".env already exists, skipping."
 fi
-# Always enforce correct permissions (in case a previous run failed between create and chmod)
 sudo chmod 600 "$APP_DEST/.env"
 sudo chown raffle:raffle "$APP_DEST/.env"
 
-# --- Step 9b: Set admin password via Rails credentials ---------------
-
-step "Checking admin password in Rails credentials..."
+step "Checking Rails credentials..."
 if [ ! -f "$APP_DEST/config/master.key" ]; then
     step "No master.key found -- setting up Rails credentials..."
     echo ""
@@ -262,26 +265,31 @@ if [ ! -f "$APP_DEST/config/master.key" ]; then
     sudo chown raffle:raffle "$PW_TMPFILE"
     unset ADMIN_PW ADMIN_PW_CONFIRM
 
-    # Remove stale credentials.yml.enc (deployed by rsync from dev machine,
-    # encrypted with a different master key) and generate a fresh key pair.
+    # Generate a fresh master key
     sudo rm -f "$APP_DEST/config/credentials.yml.enc"
     openssl rand -hex 16 | sudo -u raffle tee "$APP_DEST/config/master.key" >/dev/null
     sudo chmod 600 "$APP_DEST/config/master.key"
 
+    # Generate secret_key_base and write both secrets to encrypted credentials.
+    # The rails runner reads admin_password from the temp file (never in args).
+    SECRET_KEY_BASE=$(openssl rand -hex 64)
     sudo -u raffle /bin/bash -c "
         export PATH='$RAFFLE_PATH'
+        export SECRET_KEY_BASE='$SECRET_KEY_BASE'
         cd '$APP_DEST'
         RAILS_ENV=production bundle exec rails runner '
             pw = File.read(ARGV[0]).strip
+            skb = ENV[\"SECRET_KEY_BASE\"]
             creds = ActiveSupport::EncryptedConfiguration.new(
                 config_path: Rails.root.join(\"config/credentials.yml.enc\"),
                 key_path: Rails.root.join(\"config/master.key\"),
                 env_key: \"RAILS_MASTER_KEY\",
                 raise_if_missing_key: true
             )
-            creds.write({ \"admin_password\" => pw }.to_yaml)
+            creds.write({ \"secret_key_base\" => skb, \"admin_password\" => pw }.to_yaml)
         ' '$PW_TMPFILE'
     "
+    unset SECRET_KEY_BASE
 
     # Securely delete the temp file
     shred -u "$PW_TMPFILE" 2>/dev/null || rm -f "$PW_TMPFILE"
@@ -289,7 +297,7 @@ if [ ! -f "$APP_DEST/config/master.key" ]; then
     sudo chmod 600 "$APP_DEST/config/master.key" "$APP_DEST/config/credentials.yml.enc"
     sudo chown raffle:raffle "$APP_DEST/config/master.key" "$APP_DEST/config/credentials.yml.enc"
 
-    echo -e "  ${GREEN}Admin password encrypted and saved.${NC}"
+    echo -e "  ${GREEN}Admin password and secret key encrypted and saved.${NC}"
 else
     step "master.key exists, credentials already configured."
 fi
