@@ -1,0 +1,10 @@
+[Unit]
+Description=Mount RAFFLE_BAK USB drive if present at boot
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash -c 'DEV=$(blkid -L RAFFLE_BAK) && [ -n "$DEV" ] && /usr/local/bin/raffle-usb-mount add $(basename "$DEV")'
+
+[Install]
+WantedBy=multi-user.target
