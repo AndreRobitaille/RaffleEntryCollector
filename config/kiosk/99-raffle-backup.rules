@@ -1,3 +1,4 @@
 # Auto-mount USB drives labeled RAFFLE_BAK for raffle backup service
-ACTION=="add", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="RAFFLE_BAK", RUN+="/usr/local/bin/raffle-usb-mount add %k"
+# Uses systemd units instead of RUN — udev blocks mount syscalls in RUN context
+ACTION=="add", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="RAFFLE_BAK", ENV{SYSTEMD_WANTS}="raffle-usb-mount@%k.service"
 ACTION=="remove", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="RAFFLE_BAK", RUN+="/usr/local/bin/raffle-usb-mount remove %k"

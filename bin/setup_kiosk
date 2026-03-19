@@ -328,6 +328,7 @@ step "Installing systemd services..."
 sudo cp "$APP_DEST/config/systemd/raffle-kiosk.service" /etc/systemd/system/
 sudo cp "$APP_DEST/config/systemd/raffle-backup.service" /etc/systemd/system/
 sudo cp "$APP_DEST/config/systemd/raffle-backup.timer" /etc/systemd/system/
+sudo cp "$APP_DEST/config/systemd/raffle-usb-mount@.service" /etc/systemd/system/
 
 sudo systemctl daemon-reload
 sudo systemctl enable raffle-kiosk.service

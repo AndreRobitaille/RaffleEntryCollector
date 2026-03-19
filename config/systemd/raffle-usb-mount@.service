@@ -1,0 +1,9 @@
+[Unit]
+Description=Mount RAFFLE_BAK USB drive (%i)
+After=dev-%i.device
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/usr/local/bin/raffle-usb-mount add %i
+ExecStop=/usr/local/bin/raffle-usb-mount remove %i
