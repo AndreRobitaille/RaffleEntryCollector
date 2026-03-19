@@ -2,7 +2,7 @@ require "open3"
 
 class UsbBackup
   DEFAULT_STATUS_FILE = Rails.root.join("tmp", "backup_status.json")
-  USB_LABEL = "RAFFLE_BACKUP"
+  USB_LABEL = "RAFFLE_BAK"
 
   class_attribute :status_file, default: DEFAULT_STATUS_FILE
 

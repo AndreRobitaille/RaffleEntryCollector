@@ -1862,7 +1862,7 @@ Create `app/services/usb_backup.rb`:
 ```ruby
 class UsbBackup
   STATUS_FILE = Rails.root.join("tmp", "backup_status.json")
-  USB_LABEL = "RAFFLE_BACKUP"
+  USB_LABEL = "RAFFLE_BAK"
 
   def self.perform(target_dir: find_usb_mount)
     return failure("No backup target found") unless target_dir && Dir.exist?(target_dir.to_s)
@@ -1891,7 +1891,7 @@ class UsbBackup
   end
 
   def self.find_usb_mount
-    # Look for mounted filesystem with RAFFLE_BACKUP label
+    # Look for mounted filesystem with RAFFLE_BAK label
     mount_point = `findmnt -rn -S LABEL=#{USB_LABEL} -o TARGET 2>/dev/null`.strip
     mount_point.empty? ? nil : mount_point
   end
@@ -2260,7 +2260,7 @@ Update Section 7 (Admin Console) to reflect:
 
 Update Section 9 (Data Integrity) to reflect:
 - JSONL append log format
-- USB backup by drive label `RAFFLE_BACKUP` (not UUID)
+- USB backup by drive label `RAFFLE_BAK` (not UUID)
 - 5-minute backup interval
 
 Update Section 13 (Raspberry Pi Deployment) to reflect:

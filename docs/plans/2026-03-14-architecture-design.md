@@ -67,7 +67,7 @@ alternate_winner        — selected as alternate
 ### Three Layers
 1. **SQLite in WAL mode** — crash resilience, concurrent read support
 2. **JSONL append log** (`log/submissions.jsonl`) — one JSON line per submission, flushed immediately. Allows full DB reconstruction if needed.
-3. **USB backup** — cron job every 5 minutes. Looks for drive labeled `RAFFLE_BACKUP`. Copies DB (via SQLite `.backup` command) and JSONL log. Admin dashboard shows last backup time/status.
+3. **USB backup** — cron job every 5 minutes. Looks for drive labeled `RAFFLE_BAK`. Copies DB (via SQLite `.backup` command) and JSONL log. Admin dashboard shows last backup time/status.
 
 ---
 

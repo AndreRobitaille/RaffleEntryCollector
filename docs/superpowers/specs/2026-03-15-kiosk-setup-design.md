@@ -83,7 +83,7 @@ The Chromium launch script polls `curl --silent --fail http://127.0.0.1:3000/` i
 
 ### udev Rule (`/etc/udev/rules.d/99-raffle-backup.rules`)
 
-Triggers on any block device with filesystem label `RAFFLE_BACKUP`. Expects a FAT32-formatted USB drive (most common for USB sticks and maximally portable).
+Triggers on any block device with filesystem label `RAFFLE_BAK`. Expects a FAT32-formatted USB drive (most common for USB sticks and maximally portable).
 
 The udev rule calls a helper script (`/usr/local/bin/raffle-usb-mount`) that handles mount/unmount:
 

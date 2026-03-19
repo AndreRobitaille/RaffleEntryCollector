@@ -111,7 +111,7 @@ The kiosk runs on a Raspberry Pi 4 with Raspberry Pi OS 64-bit (Debian Trixie). 
 - Raspberry Pi OS 64-bit (Debian Trixie)
 - A 10.1" (or similar) touchscreen
 - Network access during initial setup (for installing packages and Ruby)
-- A FAT32-formatted USB drive labeled `RAFFLE_BACKUP` (for backups)
+- A FAT32-formatted USB drive labeled `RAFFLE_BAK` (for backups)
 
 ### Running the Setup Script
 
@@ -145,7 +145,7 @@ After the script completes, it will print next steps for setting the admin passw
 
 ### USB Backup
 
-Format a USB drive as FAT32 and label it `RAFFLE_BACKUP`. Plug it in at any time — it auto-mounts and backups begin automatically. The backup includes the SQLite database and the append-only JSONL submission log.
+Format a USB drive as FAT32 and label it `RAFFLE_BAK`. Plug it in at any time — it auto-mounts and backups begin automatically. The backup includes the SQLite database and the append-only JSONL submission log.
 
 Backup status is displayed on the admin dashboard.
 
@@ -176,7 +176,7 @@ All deployment config lives in the repo:
 - [ ] Fork/clone the repo and customize branding, interest areas, and prize text
 - [ ] Set admin password via `bin/rails credentials:edit`
 - [ ] Back up `config/master.key` securely (it's not in the repo)
-- [ ] Prepare USB drive: FAT32 format, label `RAFFLE_BACKUP`
+- [ ] Prepare USB drive: FAT32 format, label `RAFFLE_BAK`
 - [ ] Run `bin/setup_kiosk` on the Pi
 - [ ] Reboot and verify the kiosk launches
 - [ ] Test offline operation (disable network before the event)

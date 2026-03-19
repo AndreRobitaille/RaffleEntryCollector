@@ -380,7 +380,7 @@ echo -e "${GREEN}============================================================${N
 echo ""
 echo "BEFORE THE EVENT:"
 echo "  1. Prepare a USB backup drive:"
-echo "     - Format as FAT32, label it exactly: RAFFLE_BACKUP"
+echo "     - Format as FAT32, label it exactly: RAFFLE_BAK"
 echo "     - Plug it in before the event starts"
 echo "     - Backups run automatically every 5 minutes"
 echo ""

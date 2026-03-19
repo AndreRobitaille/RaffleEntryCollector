@@ -1,3 +1,3 @@
-# Auto-mount USB drives labeled RAFFLE_BACKUP for raffle backup service
-ACTION=="add", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="RAFFLE_BACKUP", RUN+="/usr/local/bin/raffle-usb-mount add %k"
-ACTION=="remove", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="RAFFLE_BACKUP", RUN+="/usr/local/bin/raffle-usb-mount remove %k"
+# Auto-mount USB drives labeled RAFFLE_BAK for raffle backup service
+ACTION=="add", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="RAFFLE_BAK", RUN+="/usr/local/bin/raffle-usb-mount add %k"
+ACTION=="remove", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="RAFFLE_BAK", RUN+="/usr/local/bin/raffle-usb-mount remove %k"

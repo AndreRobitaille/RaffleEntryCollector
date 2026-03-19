@@ -22,7 +22,7 @@
 | `config/kiosk/chromium-kiosk.sh` | Chromium launcher with health-check loop and crash recovery |
 | `config/kiosk/wayfire.ini` | Wayfire config: disable shortcuts, autostart Chromium |
 | `config/kiosk/bash_profile` | Kiosk user login profile: starts Wayfire on tty1 |
-| `config/kiosk/99-raffle-backup.rules` | udev rule: auto-mount RAFFLE_BACKUP drives |
+| `config/kiosk/99-raffle-backup.rules` | udev rule: auto-mount RAFFLE_BAK drives |
 | `config/kiosk/raffle-usb-mount` | udev helper: mount/unmount FAT32 USB drives |
 | `bin/setup_kiosk` | Main idempotent setup script tying everything together |
 | `bin/backup_to_usb` | Existing file — update comment (cron → systemd timer) |
@@ -288,16 +288,16 @@ git commit -m "feat: add Wayfire kiosk lockdown config and login profile (Issue 
 - [ ] **Step 1: Create the udev rule**
 
 ```
-# Auto-mount USB drives labeled RAFFLE_BACKUP for raffle backup service
-ACTION=="add", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="RAFFLE_BACKUP", RUN+="/usr/local/bin/raffle-usb-mount add %k"
-ACTION=="remove", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="RAFFLE_BACKUP", RUN+="/usr/local/bin/raffle-usb-mount remove %k"
+# Auto-mount USB drives labeled RAFFLE_BAK for raffle backup service
+ACTION=="add", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="RAFFLE_BAK", RUN+="/usr/local/bin/raffle-usb-mount add %k"
+ACTION=="remove", SUBSYSTEM=="block", ENV{ID_FS_LABEL}=="RAFFLE_BAK", RUN+="/usr/local/bin/raffle-usb-mount remove %k"
 ```
 
 - [ ] **Step 2: Create the mount helper script**
 
 ```bash
 #!/usr/bin/env bash
-# udev helper script for mounting/unmounting RAFFLE_BACKUP USB drives
+# udev helper script for mounting/unmounting RAFFLE_BAK USB drives
 # Called by 99-raffle-backup.rules — runs as root
 # Must be owned by root:root, mode 755
 
@@ -616,7 +616,7 @@ echo ""
 echo "After reboot:"
 echo "  - Rails starts automatically via systemd"
 echo "  - Kiosk user auto-logins and launches Chromium"
-echo "  - USB backup runs every 5 minutes (plug in RAFFLE_BACKUP drive)"
+echo "  - USB backup runs every 5 minutes (plug in RAFFLE_BAK drive)"
 echo ""
 echo "Emergency access:"
 echo "  - Ctrl+Alt+F2 for TTY login as 'andre'"

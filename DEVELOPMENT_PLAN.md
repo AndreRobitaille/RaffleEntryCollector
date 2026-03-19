@@ -331,7 +331,7 @@ Three layers:
     if the database is lost.
 3.  **USB backup** — systemd timer every 5 minutes copies the database
     (via SQLite `.backup` command) and the JSONL log to a USB drive labeled
-    `RAFFLE_BACKUP`. The drive auto-mounts via udev rules.
+    `RAFFLE_BAK`. The drive auto-mounts via udev rules.
 
 Admin dashboard displays:
 

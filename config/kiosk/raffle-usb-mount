@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# udev helper script for mounting/unmounting RAFFLE_BACKUP USB drives
+# udev helper script for mounting/unmounting RAFFLE_BAK USB drives
 # Called by 99-raffle-backup.rules — runs as root
 # Must be owned by root:root, mode 755
 
