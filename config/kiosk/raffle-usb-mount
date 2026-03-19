@@ -11,6 +11,10 @@ MOUNT_POINT="/mnt/raffle_backup"
 
 case "$ACTION" in
     add)
+        if mountpoint -q "$MOUNT_POINT" 2>/dev/null; then
+            logger -t raffle-usb "$MOUNT_POINT already mounted, skipping"
+            exit 0
+        fi
         mkdir -p "$MOUNT_POINT"
         mount -t vfat -o "uid=raffle,gid=raffle,umask=022" "/dev/$DEVICE" "$MOUNT_POINT"
         logger -t raffle-usb "Mounted /dev/$DEVICE at $MOUNT_POINT"
